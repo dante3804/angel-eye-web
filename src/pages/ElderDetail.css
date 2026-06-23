@@ -1,0 +1,400 @@
+/* =========================================================
+   ElderDetail — 상세 모니터링 화면 (모바일 세로 스크롤 우선)
+   ========================================================= */
+.detail {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 16px 16px 56px;
+}
+
+.detail.not-found {
+  text-align: center;
+  padding-top: 80px;
+}
+
+/* ── 헤더 ── */
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 0 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.back-btn {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--text-h);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.back-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.back-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.detail-name-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.detail-title h1 {
+  font-size: 1.7rem;
+  line-height: 1.1;
+}
+
+.detail-meta {
+  margin: 5px 0 0;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+}
+
+.back-link {
+  display: inline-block;
+  margin-top: 16px;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ── 그리드 레이아웃 ── */
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+/* ── 패널 공통 ── */
+.panel {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--panel);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-panel);
+  padding: 18px;
+}
+
+.panel-title {
+  font-size: 1rem;
+  color: var(--text-h);
+  margin-bottom: 14px;
+  letter-spacing: 0.01em;
+}
+
+.panel-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.panel-title-row .panel-title {
+  margin-bottom: 0;
+}
+
+.panel-badge {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 3px 7px;
+}
+
+/* ── 위험도 게이지 ── */
+.gauge-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.risk-gauge {
+  position: relative;
+  width: 200px;
+  max-width: 100%;
+}
+
+.risk-gauge-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.risk-gauge-value {
+  transition: stroke-dashoffset 0.8s ease;
+  animation: ring-pulse 2.4s ease-in-out infinite;
+}
+
+.risk-gauge-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.risk-gauge-score {
+  font-size: 3rem;
+  font-weight: 800;
+  color: var(--s-color);
+  line-height: 1;
+  text-shadow: 0 0 18px var(--s-glow);
+}
+
+.risk-gauge-unit {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
+.risk-gauge-status {
+  margin-top: 4px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--s-color);
+}
+
+.gauge-note {
+  margin-top: 14px;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+/* ── Skeleton 시각화 ── */
+.skeleton-stage {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 50% 40%, var(--accent-faint), transparent 60%),
+    var(--panel-solid);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.skeleton-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.skeleton-pose {
+  position: relative;
+  width: auto;
+  height: 78%;
+  color: var(--accent);
+  filter: drop-shadow(0 0 8px var(--accent-glow));
+}
+
+.skeleton-scan {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--accent-faint) 60%,
+    transparent
+  );
+  animation: scan-move 3.5s linear infinite;
+}
+
+@keyframes scan-move {
+  0% {
+    transform: translateY(-120%);
+  }
+  100% {
+    transform: translateY(320%);
+  }
+}
+
+.skeleton-placeholder-text {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
+/* ── 알림 타임라인 ── */
+.alert-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.alert-item {
+  position: relative;
+  padding: 0 0 16px 22px;
+  border-left: 2px solid var(--border);
+}
+.alert-item:last-child {
+  padding-bottom: 0;
+  border-left-color: transparent;
+}
+
+.alert-marker {
+  position: absolute;
+  left: -7px;
+  top: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--s-color);
+  box-shadow: 0 0 8px var(--s-color);
+}
+
+.alert-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.alert-type {
+  font-weight: 700;
+  color: var(--text-h);
+  font-size: 0.95rem;
+}
+
+.alert-tag {
+  font-size: 0.72rem;
+  font-weight: 700;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  padding: 1px 6px;
+}
+
+.alert-msg {
+  margin: 4px 0 4px;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+.alert-time {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
+.timeline-empty {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+/* ── 24시간 활동 그래프 ── */
+.legend {
+  display: flex;
+  gap: 12px;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.74rem;
+  color: var(--text-dim);
+}
+
+.legend-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+}
+
+.activity-bars {
+  width: 100%;
+}
+
+.activity-track {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 120px;
+  padding: 6px 0;
+}
+
+.activity-bar-col {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+
+.activity-bar {
+  width: 100%;
+  min-height: 3px;
+  border-radius: 3px 3px 0 0;
+  transition: height 0.3s ease;
+}
+
+.activity-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+
+/* ── 데스크탑 레이아웃 ── */
+@media (min-width: 760px) {
+  .detail {
+    padding: 28px 24px 64px;
+  }
+  .detail-title h1 {
+    font-size: 2rem;
+  }
+  .detail-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      'gauge timeline'
+      'skeleton timeline'
+      'activity activity';
+  }
+  .gauge-panel {
+    grid-area: gauge;
+  }
+  .skeleton-panel {
+    grid-area: skeleton;
+  }
+  .timeline-panel {
+    grid-area: timeline;
+  }
+  .activity-panel {
+    grid-area: activity;
+  }
+}
+
+@media (min-width: 1000px) {
+  .detail-grid {
+    grid-template-columns: 1.1fr 1fr 1fr;
+    grid-template-areas:
+      'gauge skeleton timeline'
+      'activity activity timeline';
+  }
+}

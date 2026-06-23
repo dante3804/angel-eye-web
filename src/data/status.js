@@ -1,0 +1,36 @@
+// 상태별 라벨/색상 단일 정의 — 색상 컨벤션: 정상=초록, 주의=노랑, 위험=빨강
+// 색상 값 자체는 theme.css의 CSS 변수에서 가져온다 (var 참조).
+export const STATUS_META = {
+  normal: { label: '정상', cssVar: 'var(--status-normal)', glowVar: 'var(--status-normal-glow)', anim: 'breathe 3.2s ease-in-out infinite' },
+  warning: { label: '주의', cssVar: 'var(--status-warning)', glowVar: 'var(--status-warning-glow)', anim: 'blink-slow 1.6s ease-in-out infinite' },
+  danger: { label: '위험', cssVar: 'var(--status-danger)', glowVar: 'var(--status-danger-glow)', anim: 'blink-fast 0.9s ease-in-out infinite' },
+}
+
+export const STATUS_ORDER = ['normal', 'warning', 'danger']
+
+export function getStatusMeta(status) {
+  return STATUS_META[status] ?? STATUS_META.normal
+}
+
+// 실시간 경과 카운터: "방금 전 / N초 전 / N분 N초 전 / N시간 N분 전"
+export function formatElapsed(isoString, now = new Date()) {
+  const diffSec = Math.max(0, Math.floor((now - new Date(isoString)) / 1000))
+
+  if (diffSec < 3) return '방금 전'
+  if (diffSec < 60) return `${diffSec}초 전`
+
+  const min = Math.floor(diffSec / 60)
+  const sec = diffSec % 60
+  if (min < 60) return `${min}분 ${sec}초 전`
+
+  const hr = Math.floor(min / 60)
+  return `${hr}시간 ${min % 60}분 전`
+}
+
+// 절대 시각 HH:MM
+export function formatClock(isoString) {
+  const d = new Date(isoString)
+  const hh = String(d.getHours()).padStart(2, '0')
+  const mm = String(d.getMinutes()).padStart(2, '0')
+  return `${hh}:${mm}`
+}

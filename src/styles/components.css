@@ -1,0 +1,62 @@
+/* =========================================================
+   공용 컴포넌트 스타일 (StatusPulse, Sparkline, SkeletonFigure)
+   ========================================================= */
+
+/* ── StatusPulse ── */
+.status-pulse {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.status-pulse-ring {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-pulse-core {
+  display: block;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 10px 1px currentColor;
+}
+
+.status-pulse.size-md .status-pulse-core {
+  width: 11px;
+  height: 11px;
+}
+.status-pulse.size-lg .status-pulse-core {
+  width: 16px;
+  height: 16px;
+}
+.status-pulse.size-sm .status-pulse-core {
+  width: 8px;
+  height: 8px;
+}
+
+.status-pulse-label {
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+}
+.status-pulse.size-lg .status-pulse-label {
+  font-size: 1.1rem;
+}
+
+/* ── Sparkline ── */
+.sparkline {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* ── SkeletonFigure ── */
+.skeleton-figure {
+  width: 100%;
+  height: 100%;
+  display: block;
+}

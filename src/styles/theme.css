@@ -1,0 +1,157 @@
+/* =========================================================
+   Angel-Eye 디자인 시스템 / theme.css
+   - 다크 모드 베이스 (24시간 모니터링 CCTV 톤)
+   - 액센트: 시안(AI/테크), 상태색 유지
+   - 모든 색상은 CSS 변수로 — 추후 라이트 모드 토글 대비
+   ========================================================= */
+
+/* Pretendard (한글 가독성). 실패 시 system 폰트로 폴백 */
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+
+:root {
+  /* ── 폰트 ── */
+  --font-sans:
+    'Pretendard Variable', Pretendard, Inter, system-ui, 'Segoe UI',
+    'Apple SD Gothic Neo', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', ui-monospace, Consolas, monospace;
+
+  /* ── 액센트 ── */
+  --accent: #00d9ff;
+  --accent-dim: rgba(0, 217, 255, 0.5);
+  --accent-glow: rgba(0, 217, 255, 0.25);
+  --accent-faint: rgba(0, 217, 255, 0.08);
+
+  /* ── 상태색 (정상=초록, 주의=노랑, 위험=빨강) ── */
+  --status-normal: #22e07a;
+  --status-normal-glow: rgba(34, 224, 122, 0.35);
+  --status-warning: #ffc53d;
+  --status-warning-glow: rgba(255, 197, 61, 0.35);
+  --status-danger: #ff4d5e;
+  --status-danger-glow: rgba(255, 77, 94, 0.45);
+}
+
+/* ── 다크 모드 (기본) ── */
+:root,
+[data-theme='dark'] {
+  --bg: #0b1220;
+  --bg-elevated: #111c30;
+  --panel: rgba(17, 28, 48, 0.72);
+  --panel-solid: #0f1828;
+  --border: rgba(120, 160, 210, 0.16);
+  --border-strong: rgba(0, 217, 255, 0.35);
+  --grid-line: rgba(120, 160, 210, 0.06);
+
+  --text: #c8d4e6;
+  --text-h: #f3f7ff;
+  --text-dim: #6b7c96;
+
+  --shadow-panel: 0 8px 30px -12px rgba(0, 0, 0, 0.7);
+  --glow-soft: 0 0 0 1px rgba(0, 217, 255, 0.04);
+}
+
+/* ── 라이트 모드 (추후 토글용 — 스켈레톤만 정의) ── */
+[data-theme='light'] {
+  --bg: #eef2f8;
+  --bg-elevated: #ffffff;
+  --panel: rgba(255, 255, 255, 0.85);
+  --panel-solid: #ffffff;
+  --border: rgba(20, 40, 80, 0.12);
+  --border-strong: rgba(0, 160, 200, 0.4);
+  --grid-line: rgba(20, 40, 80, 0.05);
+
+  --text: #344056;
+  --text-h: #0b1220;
+  --text-dim: #7a8699;
+
+  --shadow-panel: 0 8px 24px -14px rgba(20, 40, 80, 0.35);
+  --glow-soft: 0 0 0 1px rgba(0, 160, 200, 0.06);
+}
+
+/* =========================================================
+   애니메이션 키프레임
+   ========================================================= */
+
+/* 정상: 잔잔한 호흡 */
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+/* 주의: 천천히 점멸 */
+@keyframes blink-slow {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* 위험: 빠른 경고 깜빡임 */
+@keyframes blink-fast {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 var(--status-danger-glow);
+  }
+  50% {
+    opacity: 0.5;
+    box-shadow: 0 0 0 6px transparent;
+  }
+}
+
+/* LIVE 점등 */
+@keyframes pulse-live {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* 게이지 링 회전 글로우 */
+@keyframes ring-pulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 4px currentColor);
+  }
+  50% {
+    filter: drop-shadow(0 0 12px currentColor);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* =========================================================
+   유틸 — 상태 클래스 (색상에만 의존하지 않도록 텍스트 병기는 컴포넌트에서)
+   ========================================================= */
+.s-normal {
+  --s-color: var(--status-normal);
+  --s-glow: var(--status-normal-glow);
+}
+.s-warning {
+  --s-color: var(--status-warning);
+  --s-glow: var(--status-warning-glow);
+}
+.s-danger {
+  --s-color: var(--status-danger);
+  --s-glow: var(--status-danger-glow);
+}

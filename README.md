@@ -1,16 +1,79 @@
-# React + Vite
+# Angel-Eye — AI 비전 기반 고령노인 낙상 예지 시스템
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+> 한이음 드림업 2026 프로젝트 · 팀 Angel-Eye
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 한 줄 소개
 
-## React Compiler
+**개인정보를 보호하면서 노인의 낙상을 사고 발생 전에 예측하는 엣지 AI 시스템**
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the Oxlint configuration
+## 문제 정의
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+- 65세 이상 고령자 안전사고의 **62.7%가 낙상**이며, 그중 **73%가 가정 내**에서 발생
+- 2021년부터 **낙상·추락이 노인 사고사망 원인 1위**
+- 기존 시스템은 "사고 후 감지"에 그침 → **사전 예방**이 핵심 미충족 과제
+- CCTV 기반 모니터링은 **개인정보 침해** 우려로 실생활 도입에 한계
+
+---
+
+## 우리의 접근
+
+| 구분 | 내용 |
+|------|------|
+| **비식별화** | 원본 영상 즉시 파기, 관절 좌표(Skeleton)만 활용 → 개인정보 보호 |
+| **예지 (Pre-event)** | 낙상 "순간"이 아닌 사고 발생 **3~5초 전 전조 행동** 포착 목표 |
+| **엣지 AI** | NVIDIA Jetson 온디바이스 처리 → 외부 서버 전송 없이 프라이버시 확보 |
+
+---
+
+## 현재 구현 수준 (MVP)
+
+- **MediaPipe Pose** 기반 실시간 33개 관절 추출 (웹캠 30fps)
+- **다중 지표 낙상 판정**: 수직 속도(주) + 가속도 스파이크(보조)
+  - 논문 근거: Bourke et al. (2008) 수직 속도 −1.3 m/s 낙상 구분 기준 참고
+- **실시간 시각화**: 가속도 그래프 + 위험도 게이지 + 단계별 알림
+- **보호자 웹 대시보드**: 노인별 상태 모니터링 + 측정 결과 자동 반영
+- **데이터 로깅**: CSV 추출로 정량 분석 지원
+
+🔗 라이브 데모: `https://dante3804.github.io/angel-eye-web/`
+
+---
+
+## 기술 스택
+
+```
+프론트엔드   React + Vite (PWA), GitHub Pages
+AI/비전       MediaPipe Pose, OpenCV
+엣지 하드웨어  NVIDIA Jetson Orin Nano, Orbbec Astra RGB-D
+예지 모델      LSTM / Transformer (개발 예정)
+백엔드         Firebase (연동 예정)
+```
+
+---
+
+## 우리가 인식한 한계 (인사이트를 구하는 지점)
+
+1. **정규화 좌표 → 실제 물리량(m/s) 변환**의 정확도 문제
+2. **단일 카메라 2D 추정**의 깊이 정보 한계
+3. **"낙상 순간 감지" → "전조 예지"** 로의 전환 방법론
+4. **실제 낙상 데이터 부재** — 시뮬레이션 기반 학습의 신뢰도
+
+---
+
+## 로드맵
+
+| 시기 | 목표 |
+|------|------|
+| ~현재 | MVP: 실시간 관절 추출 + 가속도 낙상 감지 |
+| 6~7월 | LSTM 예지 모델 설계 + 데이터 수집 |
+| 8월 | TensorRT 경량화 + Jetson 이관 |
+| 9~10월 | 실환경 테스트 + 특허 출원 + 논문 투고 |
+
+---
+
+## 팀 구성
+
+AI 모델 · 하드웨어 · 백엔드 · 프론트엔드 · 문서/특허 (5인)

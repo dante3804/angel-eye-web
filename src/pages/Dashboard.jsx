@@ -3,12 +3,17 @@ import SkeletonFigure from '../components/SkeletonFigure'
 import { elders } from '../data/elders'
 import { STATUS_META, STATUS_ORDER } from '../data/status'
 import { useNow } from '../hooks/useNow'
+import { useMonitoring } from '../context/monitoring-store'
 import './Dashboard.css'
 
 function Dashboard() {
   const now = useNow(1000)
+  const { applyOverride } = useMonitoring()
 
-  const counts = elders.reduce(
+  // 라이브 측정 결과를 정적 데이터 위에 반영
+  const liveElders = elders.map(applyOverride)
+
+  const counts = liveElders.reduce(
     (acc, e) => ({ ...acc, [e.status]: (acc[e.status] ?? 0) + 1 }),
     {},
   )
@@ -53,7 +58,7 @@ function Dashboard() {
 
       <section className="summary" aria-label="모니터링 요약">
         <div className="summary-total">
-          <span className="summary-total-num mono">{elders.length}</span>
+          <span className="summary-total-num mono">{liveElders.length}</span>
           <span className="summary-total-label">명 모니터링 중</span>
         </div>
         <div className="summary-status">
@@ -70,7 +75,7 @@ function Dashboard() {
       </section>
 
       <main className="elder-grid">
-        {elders.map((elder) => (
+        {liveElders.map((elder) => (
           <ElderCard key={elder.id} elder={elder} />
         ))}
       </main>

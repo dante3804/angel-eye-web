@@ -179,6 +179,17 @@
 }
 
 /* ── Skeleton 시각화 ── */
+.skeleton-panel-live {
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.skeleton-panel-live:hover,
+.skeleton-panel-live:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), var(--shadow-panel);
+  outline: none;
+}
+
 .skeleton-stage {
   position: relative;
   aspect-ratio: 4 / 3;

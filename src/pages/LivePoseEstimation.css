@@ -1,0 +1,415 @@
+/* =========================================================
+   LivePoseEstimation — 실시간 자세 추정 / 낙상 감지 화면
+   (공통 클래스는 .live 하위로 스코프해 다른 페이지와 충돌 방지)
+   ========================================================= */
+.live {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 16px 16px 56px;
+  transition: box-shadow 0.2s ease;
+}
+
+/* 위험 시 화면 테두리 빨간 펄스 */
+.live.danger-pulse {
+  animation: danger-border 0.9s ease-in-out infinite;
+}
+@keyframes danger-border {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0 3px var(--status-danger),
+      inset 0 0 40px var(--status-danger-glow);
+  }
+  50% {
+    box-shadow: inset 0 0 0 6px var(--status-danger),
+      inset 0 0 90px var(--status-danger-glow);
+  }
+}
+
+/* ── 헤더 ── */
+.live-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 0 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.live .back-btn {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--text-h);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.live .back-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.live .back-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.live-title {
+  flex: 1;
+  min-width: 0;
+}
+.live-name-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.live-title h1 {
+  font-size: 1.5rem;
+  line-height: 1.1;
+}
+.live-meta {
+  margin: 5px 0 0;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+}
+
+.status-badge {
+  flex-shrink: 0;
+  font-size: 0.9rem;
+  font-weight: 800;
+  padding: 6px 14px;
+  border-radius: 999px;
+  color: var(--s-color, var(--status-normal));
+  border: 1.5px solid var(--s-color, var(--status-normal));
+  background: color-mix(in srgb, var(--s-color, var(--status-normal)) 12%, transparent);
+}
+.status-badge.s-normal {
+  --s-color: var(--status-normal);
+}
+.status-badge.s-warning {
+  --s-color: var(--status-warning);
+}
+.status-badge.s-danger {
+  --s-color: var(--status-danger);
+  animation: blink-fast 0.9s ease-in-out infinite;
+}
+
+/* ── 위험 알림 배너 ── */
+.fall-alert {
+  margin-top: 14px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--status-danger);
+  border: 1.5px solid var(--status-danger);
+  background: color-mix(in srgb, var(--status-danger) 14%, transparent);
+  text-align: center;
+  animation: blink-fast 0.9s ease-in-out infinite;
+}
+
+/* ── 그리드 ── */
+.live-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.live .panel {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--panel);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-panel);
+  padding: 18px;
+}
+.live .panel-title {
+  font-size: 1rem;
+  color: var(--text-h);
+  margin-bottom: 14px;
+}
+.live .panel-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.live .panel-title-row .panel-title {
+  margin-bottom: 0;
+}
+.live .panel-badge {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 3px 7px;
+  white-space: nowrap;
+}
+
+/* ── 카메라 스테이지 ── */
+.camera-stage {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel-solid);
+  overflow: hidden;
+}
+.camera-video,
+.camera-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.camera-canvas {
+  pointer-events: none;
+}
+/* 전면 카메라 거울 반전 */
+.mirror {
+  transform: scaleX(-1);
+}
+
+.camera-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+  padding: 20px;
+  background: rgba(11, 18, 32, 0.72);
+  color: var(--text-h);
+}
+.camera-overlay p {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+.camera-overlay span {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+.camera-overlay.error p {
+  color: var(--status-danger);
+  font-weight: 600;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* ── 컨트롤 버튼 ── */
+.camera-controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+.btn {
+  flex: 1;
+  min-height: 48px;
+  padding: 0 18px;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text-h);
+  transition: all 0.15s ease;
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #04121a;
+}
+.btn-primary:not(:disabled):hover {
+  box-shadow: 0 0 18px var(--accent-glow);
+}
+.btn-stop {
+  background: var(--status-danger);
+  border-color: var(--status-danger);
+  color: #fff;
+}
+.btn-ghost {
+  flex: 0 0 auto;
+  background: transparent;
+}
+.btn-ghost:not(:disabled):hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.btn.full {
+  width: 100%;
+  flex: 1 1 100%;
+  margin-top: 6px;
+}
+
+/* ── 가속도 수치 readout ── */
+.accel-readout {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 4px 16px;
+  flex-wrap: wrap;
+}
+.readout-main {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.readout-value {
+  font-size: 2.8rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--s-color, var(--accent));
+  text-shadow: 0 0 18px var(--s-glow, transparent);
+}
+.readout-unit {
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+.readout-sub {
+  display: flex;
+  gap: 16px;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+/* ── 차트 ── */
+.accel-chart {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel-solid);
+}
+.chart-label {
+  fill: var(--text-dim);
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+
+/* ── 임계값 슬라이더 (시연/튜닝) ── */
+.tuning-sliders {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--border);
+}
+.tuning-title {
+  font-size: 0.72rem;
+  color: var(--accent);
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+}
+.tuning-row {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr auto;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.tuning-label {
+  font-size: 0.78rem;
+  color: var(--text);
+}
+.tuning-row input[type='range'] {
+  width: 100%;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.tuning-value {
+  font-size: 0.78rem;
+  color: var(--text-h);
+  min-width: 84px;
+  text-align: right;
+}
+
+/* ── 결과 저장 안내 ── */
+.save-note {
+  margin-top: 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--status-normal);
+  text-align: center;
+}
+
+/* ── 통계 ── */
+.stat-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel-solid);
+  text-align: center;
+}
+.stat-label {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-h);
+}
+.danger-text {
+  color: var(--status-danger);
+}
+.hint {
+  margin-top: 10px;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+/* ── 데스크탑 레이아웃 ── */
+@media (min-width: 860px) {
+  .live {
+    padding: 28px 24px 64px;
+  }
+  .live-title h1 {
+    font-size: 1.8rem;
+  }
+  .live-grid {
+    grid-template-columns: 1.2fr 1fr;
+    grid-template-areas:
+      'camera accel'
+      'camera stats';
+    align-items: start;
+  }
+  .camera-panel {
+    grid-area: camera;
+  }
+  .accel-panel {
+    grid-area: accel;
+  }
+  .stats-panel {
+    grid-area: stats;
+  }
+}

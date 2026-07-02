@@ -7,6 +7,7 @@ import SkeletonFigure from '../components/SkeletonFigure'
 import { getElderById } from '../data/elders'
 import { getStatusMeta, formatElapsed, formatClock } from '../data/status'
 import { useNow } from '../hooks/useNow'
+import { useMonitoring } from '../context/monitoring-store'
 import './ElderDetail.css'
 
 const GENDER_LABEL = { female: '여성', male: '남성' }
@@ -15,7 +16,9 @@ function ElderDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const now = useNow(1000)
-  const elder = getElderById(id)
+  const { applyOverride } = useMonitoring()
+  // 라이브 측정 결과를 반영한 elder (없으면 원본)
+  const elder = applyOverride(getElderById(id))
 
   if (!elder) {
     return (
@@ -64,11 +67,23 @@ function ElderDetail() {
           </p>
         </section>
 
-        {/* ── Skeleton 시각화 placeholder ── */}
-        <section className="panel skeleton-panel">
+        {/* ── Skeleton 시각화 → 실시간 자세 추정 화면 진입 ── */}
+        <section
+          className="panel skeleton-panel skeleton-panel-live"
+          role="button"
+          tabIndex={0}
+          onClick={() => navigate(`/elder/${elder.id}/live`)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              navigate(`/elder/${elder.id}/live`)
+            }
+          }}
+          aria-label="실시간 자세 추정 화면 열기"
+        >
           <div className="panel-title-row">
             <h2 className="panel-title">실시간 자세 추정</h2>
-            <span className="panel-badge mono">POSE</span>
+            <span className="panel-badge mono">LIVE ▶</span>
           </div>
           <div className="skeleton-stage">
             <span className="skeleton-grid" aria-hidden="true" />
@@ -80,7 +95,7 @@ function ElderDetail() {
             />
             <span className="skeleton-scan" aria-hidden="true" />
             <p className="skeleton-placeholder-text">
-              실시간 관절 좌표 렌더링 예정 영역
+              탭하여 웹캠 · 가속도 낙상 감지 시작
             </p>
           </div>
         </section>

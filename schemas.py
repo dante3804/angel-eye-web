@@ -1,6 +1,6 @@
 from pydantic import BaseModel, field_validator
 from datetime import datetime
-
+from typing import Optional
 
 # ---------------User ──────────────
 class UserCreate(BaseModel):
@@ -118,3 +118,14 @@ class JetsonEvent(BaseModel):
         if v not in allowed:
             raise ValueError(f"action은 {allowed} 중 하나여야 합니다")
         return v
+    
+# 보호자 FCM 토큰 등록/수정용
+class FcmTokenUpdate(BaseModel):
+    user_id: int
+    fcm_token: str
+
+
+# Guardianship 연결 생성용
+class GuardianshipCreate(BaseModel):
+    elder_id: int
+    guardian_id: int

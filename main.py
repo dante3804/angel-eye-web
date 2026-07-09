@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 import models, schemas
 from database import engine, get_db
+from firebase import send_push_notification
 
 # DB에 테이블 자동 생성
 models.Base.metadata.create_all(bind=engine)
@@ -105,6 +106,8 @@ def add_notification(noti: schemas.NotificationCreate, db: Session = Depends(get
     return new_noti
 
 # ── Jetson 수신 API ──────────────────────────
+
+
 @app.post("/jetson/event", response_model=schemas.EventResponse)
 def receive_jetson_event(data: schemas.JetsonEvent, db: Session = Depends(get_db)):
     # 1. user_id 존재 확인
@@ -117,9 +120,76 @@ def receive_jetson_event(data: schemas.JetsonEvent, db: Session = Depends(get_db
         user_id=data.user_id,
         risk_level=data.risk_level,
         action=data.action,
-        detected_at=data.timestamp  # Jetson이 보낸 시간을 그대로 저장
+        detected_at=data.timestamp
     )
     db.add(new_event)
     db.commit()
     db.refresh(new_event)
+
+    # 3. normal이면 알림 없이 종료
+    if data.risk_level == "normal":
+        return new_event
+
+    # 4. 이 유저의 보호자들 조회
+    guardianships = db.query(models.Guardianship).filter(
+        models.Guardianship.elder_id == data.user_id
+    ).all()
+
+    # 5. 각 보호자에게 알림 발송
+    for g in guardianships:
+        guardian = db.query(models.User).filter(models.User.id == g.guardian_id).first()
+        
+        status = "failed"
+        if guardian and guardian.fcm_token:
+            try:
+                send_push_notification(
+                    token=guardian.fcm_token,
+                    title="낙상 위험 감지",
+                    body=f"{new_event.action} 상태가 감지되었습니다 (위험도: {new_event.risk_level})"
+                )
+                status = "sent"
+            except Exception as e:
+                print(f"알림 발송 실패: {e}")
+                status = "failed"
+
+        notification = models.Notification(
+            event_id=new_event.id,
+            status=status
+        )
+        db.add(notification)
+
+    db.commit()
     return new_event
+
+
+#FCM 토큰 등록/수정
+@app.put("/users/fcm-token", response_model=schemas.UserResponse)
+def update_fcm_token(data: schemas.FcmTokenUpdate, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.id == data.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="존재하지 않는 유저입니다")
+    
+    user.fcm_token = data.fcm_token
+    db.commit()
+    db.refresh(user)
+    return user
+
+# Guardianship 연결 생성 (노인-보호자 매칭)
+@app.post("/guardianships")
+def add_guardianship(data: schemas.GuardianshipCreate, db: Session = Depends(get_db)):
+    elder = db.query(models.User).filter(models.User.id == data.elder_id).first()
+    guardian = db.query(models.User).filter(models.User.id == data.guardian_id).first()
+    
+    if not elder or elder.role != "elder":
+        raise HTTPException(status_code=404, detail="존재하지 않거나 elder가 아닙니다")
+    if not guardian or guardian.role != "guardian":
+        raise HTTPException(status_code=404, detail="존재하지 않거나 guardian이 아닙니다")
+    
+    new_link = models.Guardianship(
+        elder_id=data.elder_id,
+        guardian_id=data.guardian_id
+    )
+    db.add(new_link)
+    db.commit()
+    db.refresh(new_link)
+    return {"message": "연결 완료", "id": new_link.id}

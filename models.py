@@ -11,9 +11,20 @@ class User(Base):
     name = Column(String, nullable=False) # 이름
     phone = Column(String, nullable=False)   # 보호자 연락처
     role = Column(String, nullable=False)    # "elder" or "guardian"
+    fcm_token = Column(String, nullable=True)   # 추가: 보호자 알림용
     created_at = Column(DateTime, default=datetime.utcnow)
     
     events = relationship("Event", back_populates="user")
+    
+class Guardianship(Base):
+    __tablename__ = "guardianships"
+
+    id = Column(Integer, primary_key=True, index=True)
+    elder_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    guardian_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    elder = relationship("User", foreign_keys=[elder_id])
+    guardian = relationship("User", foreign_keys=[guardian_id])
     
 class Event(Base):
     __tablename__ = "events"

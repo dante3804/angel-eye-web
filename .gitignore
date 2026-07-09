@@ -23,3 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 firebase_key.json
+DT.db
+__pycache__/
+*.pyc

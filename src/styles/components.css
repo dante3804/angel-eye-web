@@ -22,7 +22,8 @@
   display: block;
   border-radius: 50%;
   background: currentColor;
-  box-shadow: 0 0 10px 1px currentColor;
+  /* 발광 제거 — 솔리드 상태 점 */
+  box-shadow: none;
 }
 
 .status-pulse.size-md .status-pulse-core {
@@ -52,6 +53,53 @@
   width: 100%;
   height: auto;
   overflow: visible;
+}
+
+/* ── SeniorSwitcher (ElderDetail·Live 공용 상단 스위처) ── */
+.senior-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.senior-switcher-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--ae-text-muted);
+  margin-right: 2px;
+}
+.senior-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border: 1px solid var(--ae-border);
+  border-radius: 999px;
+  background: var(--ae-bg);
+  color: var(--ae-text-2);
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    background 0.15s ease;
+}
+.senior-pill:hover {
+  border-color: var(--ae-accent-mid);
+  color: var(--ae-text);
+}
+.senior-pill.is-active {
+  border-color: var(--ae-accent);
+  background: var(--ae-accent-tint);
+  color: var(--ae-accent);
+}
+.senior-pill-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
 }
 
 /* ── SkeletonFigure ── */

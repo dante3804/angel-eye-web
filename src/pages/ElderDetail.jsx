@@ -4,6 +4,7 @@ import ActivityBars from '../components/ActivityBars'
 import AlertTimeline from '../components/AlertTimeline'
 import StatusPulse from '../components/StatusPulse'
 import SkeletonFigure from '../components/SkeletonFigure'
+import SeniorSwitcher from '../components/SeniorSwitcher'
 import { getElderById } from '../data/elders'
 import { getStatusMeta, formatElapsed, formatClock } from '../data/status'
 import { useNow } from '../hooks/useNow'
@@ -24,7 +25,7 @@ function ElderDetail() {
     return (
       <div className="detail not-found">
         <p>해당 노인 정보를 찾을 수 없습니다.</p>
-        <Link to="/" className="back-link">← 대시보드로 돌아가기</Link>
+        <Link to="/dashboard" className="back-link">← 대시보드로 돌아가기</Link>
       </div>
     )
   }
@@ -38,14 +39,13 @@ function ElderDetail() {
     >
       {/* ── 헤더 ── */}
       <header className="detail-header">
-        <button
-          type="button"
+        <Link
+          to="/dashboard"
           className="back-btn"
-          onClick={() => navigate(-1)}
-          aria-label="뒤로가기"
+          aria-label="대시보드로 돌아가기"
         >
           ←
-        </button>
+        </Link>
         <div className="detail-title">
           <div className="detail-name-row">
             <h1>{elder.name}</h1>
@@ -56,6 +56,8 @@ function ElderDetail() {
           </p>
         </div>
       </header>
+
+      <SeniorSwitcher />
 
       <div className="detail-grid">
         {/* ── 위험도 게이지 ── */}

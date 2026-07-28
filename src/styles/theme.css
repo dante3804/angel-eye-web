@@ -1,8 +1,9 @@
 /* =========================================================
    Angel-Eye 디자인 시스템 / theme.css
-   - 다크 모드 베이스 (24시간 모니터링 CCTV 톤)
-   - 액센트: 시안(AI/테크), 상태색 유지
-   - 모든 색상은 CSS 변수로 — 추후 라이트 모드 토글 대비
+   - 라이트 베이스 (화이트/그레이 + 딥블루 포인트) — tokens.css의 --ae-* 재사용
+   - 상태색(정상/주의/위험)은 유지하되 네온 글로우 제거
+   - 시맨틱 변수명(--bg/--panel/--text 등)은 그대로 두고 값만 라이트로 교체
+     → 페이지/컴포넌트 CSS를 건드리지 않고 전역 리스킨
    ========================================================= */
 
 /* Pretendard (한글 가독성). 실패 시 system 폰트로 폴백 */
@@ -15,56 +16,38 @@
     'Apple SD Gothic Neo', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', 'SF Mono', ui-monospace, Consolas, monospace;
 
-  /* ── 액센트 ── */
-  --accent: #00d9ff;
-  --accent-dim: rgba(0, 217, 255, 0.5);
-  --accent-glow: rgba(0, 217, 255, 0.25);
-  --accent-faint: rgba(0, 217, 255, 0.08);
+  /* ── 액센트 (딥블루 포인트 — tokens.css의 --ae-accent 계열) ── */
+  --accent: var(--ae-accent-mid);
+  --accent-dim: rgba(29, 90, 150, 0.5);
+  --accent-glow: transparent; /* 네온 글로우 제거 */
+  --accent-faint: rgba(29, 90, 150, 0.06);
 
-  /* ── 상태색 (정상=초록, 주의=노랑, 위험=빨강) ── */
-  --status-normal: #22e07a;
-  --status-normal-glow: rgba(34, 224, 122, 0.35);
-  --status-warning: #ffc53d;
-  --status-warning-glow: rgba(255, 197, 61, 0.35);
-  --status-danger: #ff4d5e;
-  --status-danger-glow: rgba(255, 77, 94, 0.45);
+  /* ── 상태색 (정상=초록, 주의=앰버, 위험=레드) — 발광 없이 솔리드 ── */
+  --status-normal: var(--ae-status-normal);
+  --status-normal-glow: transparent;
+  --status-warning: var(--ae-status-warning);
+  --status-warning-glow: transparent;
+  --status-danger: var(--ae-status-danger);
+  --status-danger-glow: transparent;
 }
 
-/* ── 다크 모드 (기본) ── */
-:root,
-[data-theme='dark'] {
-  --bg: #0b1220;
-  --bg-elevated: #111c30;
-  --panel: rgba(17, 28, 48, 0.72);
-  --panel-solid: #0f1828;
-  --border: rgba(120, 160, 210, 0.16);
-  --border-strong: rgba(0, 217, 255, 0.35);
-  --grid-line: rgba(120, 160, 210, 0.06);
-
-  --text: #c8d4e6;
-  --text-h: #f3f7ff;
-  --text-dim: #6b7c96;
-
-  --shadow-panel: 0 8px 30px -12px rgba(0, 0, 0, 0.7);
-  --glow-soft: 0 0 0 1px rgba(0, 217, 255, 0.04);
-}
-
-/* ── 라이트 모드 (추후 토글용 — 스켈레톤만 정의) ── */
-[data-theme='light'] {
-  --bg: #eef2f8;
+/* ── 라이트 베이스 (화이트/그레이 + 딥블루) — --ae-* 토큰 기반 ──
+   현재 앱에 data-theme 토글이 없어 단일 :root로 통합. (다크모드 재도입 시 분기) */
+:root {
+  --bg: var(--ae-bg);
   --bg-elevated: #ffffff;
-  --panel: rgba(255, 255, 255, 0.85);
+  --panel: var(--ae-bg-alt);
   --panel-solid: #ffffff;
-  --border: rgba(20, 40, 80, 0.12);
-  --border-strong: rgba(0, 160, 200, 0.4);
-  --grid-line: rgba(20, 40, 80, 0.05);
+  --border: var(--ae-border);
+  --border-strong: var(--ae-accent-mid);
+  --grid-line: rgba(20, 40, 80, 0.04);
 
-  --text: #344056;
-  --text-h: #0b1220;
-  --text-dim: #7a8699;
+  --text: var(--ae-text);
+  --text-h: var(--ae-text);
+  --text-dim: var(--ae-text-2);
 
-  --shadow-panel: 0 8px 24px -14px rgba(20, 40, 80, 0.35);
-  --glow-soft: 0 0 0 1px rgba(0, 160, 200, 0.06);
+  --shadow-panel: 0 6px 20px -14px rgba(20, 40, 80, 0.22);
+  --glow-soft: none;
 }
 
 /* =========================================================

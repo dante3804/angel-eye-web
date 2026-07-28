@@ -1,0 +1,26 @@
+/* ============ Angel-Eye 공용 디자인 토큰 ============
+   화이트/그레이 기반 + 딥블루 포인트 1색.
+   앱 전역에서 공유되도록 main.jsx에서 한 번만 import 한다.
+   (모든 페이지가 이 토큰을 재사용 → 전역 스타일 충돌 재발 방지) */
+
+:root {
+  --ae-bg: #ffffff;
+  --ae-bg-alt: #f6f7f9;
+  --ae-text: #14171c;
+  --ae-text-2: #5b6270;
+  --ae-text-muted: #9aa1ad;
+  --ae-border: #e6e8ec;
+  --ae-accent: #123a5e;
+  --ae-accent-mid: #1d5a96;
+  --ae-accent-tint: #eaf2fb;
+  --ae-radius: 12px;
+  --ae-max: 960px;
+
+  /* 상태 색상(정상/주의/위험) — 발광 없이 솔리드로 사용 */
+  --ae-status-normal: #1f9d57;
+  --ae-status-warning: #c98a12;
+  --ae-status-danger: #d64545;
+  --ae-status-normal-tint: #e7f6ee;
+  --ae-status-warning-tint: #fbf1de;
+  --ae-status-danger-tint: #fbe9e9;
+}

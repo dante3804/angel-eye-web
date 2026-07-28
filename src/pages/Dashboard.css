@@ -189,10 +189,7 @@
   padding: 18px;
   border: 1px solid var(--border);
   border-radius: 16px;
-  background:
-    linear-gradient(180deg, rgba(0, 217, 255, 0.03), transparent 40%),
-    var(--panel);
-  backdrop-filter: blur(8px);
+  background: var(--ae-bg-alt);
   box-shadow: var(--shadow-panel);
   overflow: hidden;
   transition:
@@ -227,9 +224,9 @@
   outline-offset: 2px;
 }
 
-/* 위험 카드는 패널 자체가 미세하게 경고 */
+/* 위험 카드는 패널 자체가 미세하게 경고 (솔리드, 발광 없음) */
 .elder-card.s-danger {
-  border-color: rgba(255, 77, 94, 0.35);
+  border-color: var(--ae-status-danger);
 }
 
 /* 스캔라인 효과 */

@@ -89,14 +89,30 @@ export function useFallDetection() {
   const metricsRef = useRef({ ax: 0, ay: 0, vy: 0, mag: 0 })
   const statusRef = useRef('normal')
   // 세션 통계: 최대 가속도/최대 속도/낙상 횟수/최악 상태
-  const statsRef = useRef({ maxAccel: 0, maxVelocity: 0, fallCount: 0, worst: 'normal' })
+  //   + 평균 계산용 누적합(sumVy·sumAxy)과 프레임 카운트(count)
+  const statsRef = useRef({
+    maxAccel: 0,
+    maxVelocity: 0,
+    fallCount: 0,
+    worst: 'normal',
+    sumVy: 0, // v_y 누적합
+    sumAxy: 0, // a_xy(가속도 xy 크기 |a|) 누적합
+    count: 0, // 평균 분모(집계된 프레임 수)
+  })
   const activeRef = useRef(false) // 세션 활성 여부
 
   // ── UI용 published state (throttled) ──
   const [metrics, setMetrics] = useState({ ax: 0, ay: 0, vy: 0, mag: 0 })
   const [samples, setSamples] = useState([])
   const [status, setStatus] = useState('normal')
-  const [stats, setStats] = useState({ maxAccel: 0, maxVelocity: 0, fallCount: 0, worst: 'normal' })
+  const [stats, setStats] = useState({
+    maxAccel: 0,
+    maxVelocity: 0,
+    fallCount: 0,
+    worst: 'normal',
+    avgVy: 0,
+    avgAxy: 0,
+  })
 
   // worst 상태 갱신 헬퍼
   const escalate = (next) => {
@@ -164,9 +180,12 @@ export function useFallDetection() {
         mag,
       })
 
-      // 세션 최댓값 갱신
+      // 세션 최댓값 갱신 + 평균용 누적 (동일 지점에서 함께 집계)
       if (Math.abs(ay) > statsRef.current.maxAccel) statsRef.current.maxAccel = Math.abs(ay)
       if (vy > statsRef.current.maxVelocity) statsRef.current.maxVelocity = vy
+      statsRef.current.sumVy += vy // 평균 v_y용
+      statsRef.current.sumAxy += mag // 평균 a_xy용 (|a| = √(ax²+ay²))
+      statsRef.current.count += 1
 
       // ── 판정 로직 ──
       // (보조) 가속도 스파이크: 1회라도 임계 초과 → 시각 기록 + "주의" 후보
@@ -249,11 +268,19 @@ export function useFallDetection() {
     logRef.current = []
     metricsRef.current = { ax: 0, ay: 0, vy: 0, mag: 0 }
     statusRef.current = 'normal'
-    statsRef.current = { maxAccel: 0, maxVelocity: 0, fallCount: 0, worst: 'normal' }
+    statsRef.current = {
+      maxAccel: 0,
+      maxVelocity: 0,
+      fallCount: 0,
+      worst: 'normal',
+      sumVy: 0,
+      sumAxy: 0,
+      count: 0,
+    }
     setMetrics({ ax: 0, ay: 0, vy: 0, mag: 0 })
     setSamples([])
     setStatus('normal')
-    setStats({ maxAccel: 0, maxVelocity: 0, fallCount: 0, worst: 'normal' })
+    setStats({ maxAccel: 0, maxVelocity: 0, fallCount: 0, worst: 'normal', avgVy: 0, avgAxy: 0 })
   }, [])
 
   // 세션 요약 스냅샷 (ref 직접 읽음 → throttle 지연 없이 최신값)
@@ -266,6 +293,8 @@ export function useFallDetection() {
       fallCount: s.fallCount,
       maxAccel: s.maxAccel,
       maxVelocity: s.maxVelocity,
+      avgVy: s.count ? s.sumVy / s.count : 0,
+      avgAxy: s.count ? s.sumAxy / s.count : 0,
       sampleCount: logRef.current.length,
       measuredAt: new Date().toISOString(),
     }
@@ -277,7 +306,12 @@ export function useFallDetection() {
       setMetrics(metricsRef.current)
       setSamples(samplesRef.current.slice())
       setStatus(statusRef.current)
-      setStats({ ...statsRef.current })
+      const s = statsRef.current
+      setStats({
+        ...s,
+        avgVy: s.count ? s.sumVy / s.count : 0,
+        avgAxy: s.count ? s.sumAxy / s.count : 0,
+      })
     }, PUBLISH_INTERVAL_MS)
     return () => clearInterval(id)
   }, [])
@@ -294,7 +328,19 @@ export function useFallDetection() {
           `${((r.t - t0) / 1000).toFixed(3)},${r.iso},${r.ax.toFixed(4)},${r.ay.toFixed(4)},${r.vy.toFixed(4)},${r.mag.toFixed(4)}`,
       )
       .join('\n')
-    const blob = new Blob([header + body], { type: 'text/csv;charset=utf-8' })
+    // 세션 요약(평균/최대/낙상횟수) — raw 데이터 뒤에 별도 요약 행으로 추가.
+    // 열 정렬 유지: vel_y 열=v_y 지표, accel_magnitude 열=a_xy(|a|) 지표.
+    const s = statsRef.current
+    const avgVy = s.count ? s.sumVy / s.count : 0
+    const avgAxy = s.count ? s.sumAxy / s.count : 0
+    const summary =
+      '\n\n# session summary (aggregate)' +
+      `\naverage,,,,${avgVy.toFixed(4)},${avgAxy.toFixed(4)}` +
+      `\nmaximum,,,${s.maxAccel.toFixed(4)},${s.maxVelocity.toFixed(4)},` +
+      `\nfall_count,${s.fallCount},,,,` +
+      `\nframe_count,${s.count},,,,`
+
+    const blob = new Blob([header + body + summary], { type: 'text/csv;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url

@@ -1,0 +1,587 @@
+@import '../styles/tokens.css';
+
+/* ============ Angel-Eye Landing Page ============
+   디자인 토큰은 src/styles/tokens.css로 공용화됨 (--ae-* 변수).
+   시그니처: 파이프라인 위를 흐르는 바이탈 사인 라인. */
+
+.ae-page {
+  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    system-ui, sans-serif;
+  color: var(--ae-text);
+  background: var(--ae-bg);
+  line-height: 1.6;
+}
+
+.ae-page a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* 전역(다크테마) h1,h2,h3 { color: --text-h(≈흰색) } 규칙이
+   흰 배경 랜딩의 제목을 덮어 안 보이던 문제 → 랜딩 스코프에서 본문색으로 복구 */
+.ae-page h1,
+.ae-page h2,
+.ae-page h3 {
+  color: var(--ae-text);
+}
+
+/* ---------- nav ---------- */
+.ae-nav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--ae-border);
+}
+.ae-nav-inner {
+  max-width: var(--ae-max);
+  margin: 0 auto;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.ae-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--ae-accent);
+}
+.ae-nav-links {
+  display: flex;
+  gap: 24px;
+  font-size: 13px;
+  color: var(--ae-text-2);
+}
+.ae-nav-links a:hover {
+  color: var(--ae-accent);
+}
+
+/* ---------- buttons ---------- */
+.ae-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 9px 18px;
+  border-radius: 8px;
+  border: 1px solid var(--ae-border);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.ae-btn-primary {
+  background: var(--ae-accent);
+  color: #fff;
+  border-color: var(--ae-accent);
+}
+.ae-btn-primary:hover {
+  background: var(--ae-accent-mid);
+}
+.ae-btn-ghost {
+  background: transparent;
+  color: var(--ae-text);
+}
+.ae-btn-ghost:hover {
+  background: var(--ae-bg-alt);
+}
+
+/* ---------- hero ---------- */
+.ae-hero {
+  max-width: var(--ae-max);
+  margin: 0 auto;
+  padding: 56px 24px 0;
+}
+.ae-hero-text {
+  max-width: 640px;
+  margin-bottom: 32px;
+}
+.ae-eyebrow {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ae-accent-mid);
+  background: var(--ae-accent-tint);
+  padding: 4px 12px;
+  border-radius: 999px;
+  margin-bottom: 16px;
+}
+.ae-eyebrow-accent {
+  background: transparent;
+  padding: 0;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 11px;
+}
+.ae-hero h1 {
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.35;
+  margin: 0 0 16px;
+  letter-spacing: -0.01em;
+  color: var(--ae-text);
+}
+.ae-lede {
+  font-size: 15px;
+  color: var(--ae-text-2);
+  margin: 0 0 24px;
+  max-width: 560px;
+}
+.ae-hero-actions {
+  display: flex;
+  gap: 10px;
+}
+/* 버튼 그룹 아래 보조 텍스트 링크 — 두 버튼과 시각적 우선순위가 겹치지 않게 */
+.ae-hero-demolink {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ae-accent-mid);
+}
+.ae-hero-demolink:hover {
+  color: var(--ae-accent);
+  text-decoration: underline;
+}
+
+/* ---------- placeholder ---------- */
+.ae-placeholder {
+  border: 1px dashed var(--ae-border);
+  border-radius: var(--ae-radius);
+  background: var(--ae-bg-alt);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--ae-text-muted);
+  text-align: center;
+  padding: 16px;
+}
+.ae-placeholder-label {
+  font-size: 13px;
+  margin: 0;
+}
+.ae-placeholder-hint {
+  font-size: 11px;
+  margin: 0;
+  max-width: 320px;
+}
+
+/* ---------- live skeleton preview widget ---------- */
+.ae-sp {
+  position: relative;
+  width: 100%;
+  border: 1px solid var(--ae-border);
+  border-radius: var(--ae-radius);
+  background: #0b1220; /* 카메라 켜지기 전 어두운 스테이지 */
+  overflow: hidden;
+}
+/* 전면 카메라는 거울처럼 좌우 반전 (video·canvas 함께) */
+.ae-sp-video,
+.ae-sp-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+.ae-sp-canvas {
+  pointer-events: none;
+}
+.ae-sp-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  text-align: center;
+  color: #dfe6f0;
+}
+.ae-sp-hint {
+  font-size: 12px;
+  color: #9aa6ba;
+  margin: 0;
+  max-width: 340px;
+  line-height: 1.5;
+}
+.ae-sp-loading {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+}
+.ae-sp-error {
+  color: #ffd7d7;
+}
+.ae-sp-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff5a5a;
+  box-shadow: 0 0 0 0 rgba(255, 90, 90, 0.6);
+  animation: ae-sp-blink 1.4s ease-in-out infinite;
+}
+@keyframes ae-sp-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+.ae-sp-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 2;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  letter-spacing: 0.04em;
+  color: #06131f;
+  background: #00d9ff;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+.ae-sp-stop {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(10, 15, 25, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+.ae-sp-stop:hover {
+  background: rgba(10, 15, 25, 0.9);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ae-sp-dot {
+    animation: none;
+  }
+}
+
+/* ---------- stat band ---------- */
+.ae-stat-band {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--ae-border);
+  border-bottom: 1px solid var(--ae-border);
+  margin-top: 40px;
+}
+.ae-stat {
+  padding: 24px 16px;
+  text-align: center;
+  border-right: 1px solid var(--ae-border);
+}
+.ae-stat:last-child {
+  border-right: none;
+}
+.ae-stat-num {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.ae-stat-label {
+  font-size: 12px;
+  color: var(--ae-text-2);
+  margin: 4px 0 0;
+}
+/* 아직 측정되지 않은 지표: 수치처럼 크게 쓰지 않고 담담하게 */
+.ae-stat-num.ae-stat-pending {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ae-text-muted);
+  letter-spacing: 0;
+}
+
+/* 로드맵(예정) 표시용 배지 */
+.ae-roadmap-tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ae-text-2);
+  background: var(--ae-bg-alt);
+  border: 1px solid var(--ae-border);
+  border-radius: 999px;
+  padding: 2px 10px;
+  margin-bottom: 10px;
+}
+
+/* ---------- generic section ---------- */
+.ae-section {
+  max-width: var(--ae-max);
+  margin: 0 auto;
+  padding: 56px 24px;
+}
+.ae-section h2 {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 8px 0 16px;
+  letter-spacing: -0.01em;
+}
+.ae-body {
+  font-size: 14px;
+  color: var(--ae-text-2);
+  max-width: 640px;
+  margin: 0 0 20px;
+}
+.ae-section-sub {
+  font-size: 13px;
+  color: var(--ae-text-2);
+  margin: -8px 0 20px;
+}
+
+.ae-card-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.ae-mini-card {
+  background: var(--ae-bg-alt);
+  border-radius: var(--ae-radius);
+  padding: 16px;
+}
+.ae-mini-num {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0;
+}
+.ae-mini-label {
+  font-size: 12px;
+  color: var(--ae-text-2);
+  margin: 4px 0 0;
+}
+
+/* ---------- pipeline + vital line signature ---------- */
+/* 장식선(signal)과 박스 행(steps)을 각자 독립된 블록으로 세로로 쌓는다.
+   더 이상 absolute 오버레이가 아니므로 좌표 공간이 겹칠 수 없다 → 겹침 버그 원천 차단. */
+.ae-pipeline {
+  display: flex;
+  flex-direction: column;
+}
+.ae-pipeline-signal {
+  height: 36px;
+  /* 박스 행과의 명확한 분리 여백 */
+  margin-bottom: 24px;
+  color: var(--ae-border);
+  pointer-events: none;
+}
+.ae-pipeline-signal .ae-vital-line {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.ae-vital-line polyline {
+  stroke: currentColor;
+  vector-effect: non-scaling-stroke;
+  transition: color 0.4s ease;
+}
+.ae-vital-line.is-active {
+  color: var(--ae-accent-mid);
+  animation: ae-pulse-glow 1.8s ease-in-out infinite;
+}
+@keyframes ae-pulse-glow {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.ae-pipeline-steps {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+.ae-pipeline-step {
+  background: var(--ae-bg-alt);
+  border-radius: var(--ae-radius);
+  padding: 16px 12px;
+  text-align: center;
+  color: var(--ae-accent-mid);
+}
+/* 구현 완료 단계: accent 톤 강조 */
+.ae-pipeline-step.is-done {
+  background: var(--ae-accent-tint);
+  color: var(--ae-accent);
+}
+/* 개발 예정 단계: 흐린 회색 톤으로 시각적 구분 */
+.ae-pipeline-step.is-planned {
+  color: var(--ae-text-muted);
+  opacity: 0.72;
+}
+.ae-pipeline-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ae-text);
+  margin: 8px 0 2px;
+}
+.ae-pipeline-step.is-done .ae-pipeline-title {
+  color: var(--ae-accent);
+}
+.ae-pipeline-step.is-planned .ae-pipeline-title,
+.ae-pipeline-step.is-planned .ae-pipeline-sub {
+  color: var(--ae-text-muted);
+}
+.ae-pipeline-sub {
+  font-size: 11px;
+  color: var(--ae-text-2);
+  margin: 0;
+}
+/* 단계 상태 배지 */
+.ae-step-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 2px 8px;
+  margin-bottom: 8px;
+}
+.ae-step-badge.done {
+  color: var(--ae-accent);
+  background: #fff;
+  border: 1px solid var(--ae-accent);
+}
+.ae-step-badge.planned {
+  color: var(--ae-text-muted);
+  background: var(--ae-bg-alt);
+  border: 1px solid var(--ae-border);
+}
+
+/* ---------- features ---------- */
+.ae-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.ae-feature-card {
+  border: 1px solid var(--ae-border);
+  border-radius: var(--ae-radius);
+  padding: 20px 18px;
+  color: var(--ae-accent-mid);
+}
+.ae-feature-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ae-text);
+  margin: 10px 0 6px;
+}
+.ae-feature-body {
+  font-size: 13px;
+  color: var(--ae-text-2);
+  margin: 0;
+}
+
+/* ---------- tech chips ---------- */
+.ae-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ae-chip {
+  border: 1px solid var(--ae-border);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  color: var(--ae-text-2);
+}
+
+/* ---------- demo ---------- */
+.ae-demo-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 12px;
+}
+
+/* ---------- footer ---------- */
+.ae-footer {
+  max-width: var(--ae-max);
+  margin: 0 auto;
+  padding: 32px 24px 56px;
+  border-top: 1px solid var(--ae-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.ae-footer-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0;
+}
+.ae-footer-sub {
+  font-size: 12px;
+  color: var(--ae-text-2);
+  margin: 2px 0 0;
+}
+.ae-footer-links {
+  display: flex;
+  gap: 18px;
+  font-size: 13px;
+  color: var(--ae-accent-mid);
+}
+.ae-footer-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ---------- responsive ---------- */
+@media (max-width: 720px) {
+  .ae-nav-links {
+    display: none;
+  }
+  .ae-hero h1 {
+    font-size: 26px;
+  }
+  .ae-stat-band {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .ae-stat:nth-child(2) {
+    border-right: none;
+  }
+  .ae-stat:nth-child(1),
+  .ae-stat:nth-child(2) {
+    border-bottom: 1px solid var(--ae-border);
+  }
+  .ae-card-row,
+  .ae-feature-grid {
+    grid-template-columns: 1fr;
+  }
+  .ae-pipeline-steps {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  /* 신호선은 이제 독립 블록이라 좁은 화면에서도 겹치지 않음 → 그대로 노출 */
+  .ae-demo-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .ae-vital-line.is-active {
+    animation: none;
+  }
+}

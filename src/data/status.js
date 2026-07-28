@@ -12,7 +12,8 @@ export function getStatusMeta(status) {
   return STATUS_META[status] ?? STATUS_META.normal
 }
 
-// 실시간 경과 카운터: "방금 전 / N초 전 / N분 N초 전 / N시간 N분 전"
+// 실시간 경과 카운터: "방금 전 / N초 전 / N분 전 / N시간 전"
+// 1분 이상은 초를 생략해 분 단위로 축약(3분 0초 전 → 3분 전).
 export function formatElapsed(isoString, now = new Date()) {
   const diffSec = Math.max(0, Math.floor((now - new Date(isoString)) / 1000))
 
@@ -20,8 +21,7 @@ export function formatElapsed(isoString, now = new Date()) {
   if (diffSec < 60) return `${diffSec}초 전`
 
   const min = Math.floor(diffSec / 60)
-  const sec = diffSec % 60
-  if (min < 60) return `${min}분 ${sec}초 전`
+  if (min < 60) return `${min}분 전`
 
   const hr = Math.floor(min / 60)
   return `${hr}시간 ${min % 60}분 전`

@@ -1,9 +1,10 @@
 import { useCallback, useRef, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import { usePoseDetection } from '../hooks/usePoseDetection'
 import { useFallDetection, TUNABLE } from '../hooks/useFallDetection'
 import AccelerationChart from '../components/AccelerationChart'
 import StatusPulse from '../components/StatusPulse'
+import SeniorSwitcher from '../components/SeniorSwitcher'
 import { getElderById } from '../data/elders'
 import { getStatusMeta } from '../data/status'
 import { useMonitoring } from '../context/monitoring-store'
@@ -20,7 +21,6 @@ import './LivePoseEstimation.css'
 // =============================================================
 function LivePoseEstimation() {
   const { id } = useParams()
-  const navigate = useNavigate()
   const elder = getElderById(id)
   const { recordSession } = useMonitoring()
 
@@ -85,14 +85,13 @@ function LivePoseEstimation() {
     >
       {/* ── 헤더 ── */}
       <header className="live-header">
-        <button
-          type="button"
+        <Link
+          to="/dashboard"
           className="back-btn"
-          onClick={() => navigate(-1)}
-          aria-label="뒤로가기"
+          aria-label="대시보드로 돌아가기"
         >
           ←
-        </button>
+        </Link>
         <div className="live-title">
           <div className="live-name-row">
             <h1>실시간 자세 추정</h1>
@@ -104,6 +103,8 @@ function LivePoseEstimation() {
         </div>
         <span className={`status-badge s-${fall.status}`}>{statusLabel}</span>
       </header>
+
+      <SeniorSwitcher />
 
       {/* ── 위험 알림 배너 ── */}
       {fall.status === 'danger' && (
@@ -248,8 +249,16 @@ function LivePoseEstimation() {
               <span className="stat-value mono">{stats.maxVelocity.toFixed(2)}</span>
             </div>
             <div className="stat">
+              <span className="stat-label">평균 v_y</span>
+              <span className="stat-value mono">{stats.avgVy.toFixed(2)}</span>
+            </div>
+            <div className="stat">
               <span className="stat-label">최대 |a_y|</span>
               <span className="stat-value mono">{stats.maxAccel.toFixed(2)}</span>
+            </div>
+            <div className="stat">
+              <span className="stat-label">평균 a_xy</span>
+              <span className="stat-value mono">{stats.avgAxy.toFixed(2)}</span>
             </div>
             <div className="stat">
               <span className="stat-label">낙상 감지</span>

@@ -12,6 +12,11 @@
   padding-top: 80px;
 }
 
+/* 시니어 스위처 여백 (헤더 아래) */
+.detail > .senior-switcher {
+  margin: 16px 0 4px;
+}
+
 /* ── 헤더 ── */
 .detail-header {
   display: flex;

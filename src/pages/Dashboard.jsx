@@ -18,19 +18,15 @@ function Dashboard() {
     {},
   )
 
-  const clock = now.toLocaleTimeString('ko-KR', { hour12: false })
-  const date = now.toLocaleDateString('ko-KR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    weekday: 'short',
-  })
+  // 시계: "21:07:01" (콜론 구분)
+  const pad = (n) => String(n).padStart(2, '0')
+  const clock = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`
+  // 날짜: "2026.07.29 (수)"
+  const weekday = now.toLocaleDateString('ko-KR', { weekday: 'short' })
+  const date = `${now.getFullYear()}.${pad(now.getMonth() + 1)}.${pad(now.getDate())} (${weekday})`
 
   return (
     <div className="dashboard">
-      {/* 배경 모티프 */}
-      <SkeletonFigure className="bg-motif" color="var(--accent)" strokeWidth={1.5} />
-
       <header className="topbar">
         <div className="brand">
           <span className="brand-logo">
@@ -57,18 +53,22 @@ function Dashboard() {
       </header>
 
       <section className="summary" aria-label="모니터링 요약">
-        <div className="summary-total">
-          <span className="summary-total-num mono">{liveElders.length}</span>
-          <span className="summary-total-label">명 모니터링 중</span>
+        <div className="summary-caption">
+          <span className="summary-caption-title">상태 요약</span>
+          <span className="summary-caption-sub">{liveElders.length}명 모니터링 중</span>
         </div>
         <div className="summary-status">
           {STATUS_ORDER.map((status) => {
-            const { label, cssVar } = STATUS_META[status]
+            const { label, cssVar, tintVar } = STATUS_META[status]
             return (
-              <div key={status} className="summary-pill" style={{ '--s-color': cssVar }}>
-                <span className="summary-pill-num mono">{counts[status] ?? 0}</span>
-                <span className="summary-pill-label">{label}</span>
-              </div>
+              <span
+                key={status}
+                className="summary-pill"
+                style={{ '--s-color': cssVar, '--s-tint': tintVar }}
+              >
+                <span className="summary-pill-dot" aria-hidden="true" />
+                {label} {counts[status] ?? 0}
+              </span>
             )
           })}
         </div>
@@ -79,6 +79,13 @@ function Dashboard() {
           <ElderCard key={elder.id} elder={elder} />
         ))}
       </main>
+
+      <footer className="dash-foot">
+        <span className="dash-foot-note">감지 신호는 30초 간격으로 갱신됩니다.</span>
+        <span className="dash-foot-note mono">
+          카메라 {liveElders.length}대 연결 · 마지막 동기화 {clock}
+        </span>
+      </footer>
     </div>
   )
 }

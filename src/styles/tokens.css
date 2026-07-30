@@ -5,6 +5,8 @@
 
 :root {
   --ae-bg: #ffffff;
+  /* 앱 화면(Dashboard/ElderDetail/Live) 공용 배경 — 은은한 웜톤 오프화이트 */
+  --ae-bg-warm: #fafaf7;
   --ae-bg-alt: #f6f7f9;
   --ae-text: #14171c;
   --ae-text-2: #5b6270;

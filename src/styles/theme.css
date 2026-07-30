@@ -40,7 +40,6 @@
   --panel-solid: #ffffff;
   --border: var(--ae-border);
   --border-strong: var(--ae-accent-mid);
-  --grid-line: rgba(20, 40, 80, 0.04);
 
   --text: var(--ae-text);
   --text-h: var(--ae-text);
@@ -99,17 +98,6 @@
   }
   50% {
     opacity: 0.3;
-  }
-}
-
-/* 게이지 링 회전 글로우 */
-@keyframes ring-pulse {
-  0%,
-  100% {
-    filter: drop-shadow(0 0 4px currentColor);
-  }
-  50% {
-    filter: drop-shadow(0 0 12px currentColor);
   }
 }
 

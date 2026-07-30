@@ -6,6 +6,11 @@
 const NOW = Date.now()
 const agoMin = (m) => new Date(NOW - m * 60000).toISOString()
 const agoHr = (h) => new Date(NOW - h * 3600000).toISOString()
+// HH:MM (위험 카드의 "임계 초과 · 시각" 배지 텍스트 생성용)
+const clockOf = (iso) => {
+  const d = new Date(iso)
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+}
 
 // 24시간 활동 그래프용 데이터 생성 헬퍼
 // 각 시간(0~23시)의 활동량(level 0~100)과 그 시간대 상태를 부여
@@ -36,6 +41,8 @@ export const elders = [
     riskScore: 12,
     lastDetectedAt: agoMin(3),
     location: '거실',
+    // "최근 1시간 활동" 캡션 옆 상태 정보 배지 텍스트 (감지 로직 없이 상태별 고정값)
+    activityBadge: '임계 0.70',
     // 최근 1시간 sparkline (5분 간격 12포인트)
     activity1h: [22, 28, 25, 30, 27, 33, 31, 29, 35, 32, 28, 30],
     activity24h: makeActivity24h(baseDay),
@@ -56,6 +63,7 @@ export const elders = [
     riskScore: 54,
     lastDetectedAt: agoMin(12),
     location: '침실',
+    activityBadge: '활동 저하 감지',
     activity1h: [40, 18, 12, 8, 6, 5, 7, 4, 6, 9, 5, 3],
     activity24h: makeActivity24h(
       baseDay.map((d, h) =>
@@ -81,6 +89,7 @@ export const elders = [
     riskScore: 88,
     lastDetectedAt: agoMin(1),
     location: '화장실',
+    activityBadge: `임계 초과 · ${clockOf(agoMin(1))}`,
     activity1h: [30, 35, 28, 40, 95, 88, 12, 5, 3, 2, 4, 2],
     activity24h: makeActivity24h(
       baseDay.map((d, h) => {

@@ -18,18 +18,9 @@
 body {
   margin: 0;
   min-height: 100svh;
-  background: var(--bg);
-  /* 미묘한 모니터링 그리드 + 딥블루 상단 틴트 (라이트) */
-  background-image:
-    radial-gradient(
-      circle at 50% -10%,
-      var(--accent-faint),
-      transparent 55%
-    ),
-    linear-gradient(var(--grid-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-  background-size: 100% 100%, 40px 40px, 40px 40px;
-  background-attachment: fixed;
+  /* 앱 화면 공용 웜톤 오프화이트 배경.
+     (랜딩페이지는 .ae-page가 자체 흰 배경을 깔아 영향 없음) */
+  background: var(--ae-bg-warm);
 }
 
 h1,

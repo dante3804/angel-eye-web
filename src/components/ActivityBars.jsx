@@ -21,7 +21,6 @@ function ActivityBars({ data }) {
                 style={{
                   height: `${(d.level / max) * 100}%`,
                   background: cssVar,
-                  boxShadow: d.status !== 'normal' ? `0 0 8px ${cssVar}` : 'none',
                 }}
               />
             </div>

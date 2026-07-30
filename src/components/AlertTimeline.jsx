@@ -9,11 +9,11 @@ function AlertTimeline({ alerts }) {
   return (
     <ul className="alert-timeline">
       {alerts.map((a) => {
-        const { cssVar, label } = getStatusMeta(a.status)
+        const { cssVar, tintVar, label } = getStatusMeta(a.status)
         const d = new Date(a.time)
         const isToday = new Date().toDateString() === d.toDateString()
         return (
-          <li key={a.id} className="alert-item" style={{ '--s-color': cssVar }}>
+          <li key={a.id} className="alert-item" style={{ '--s-color': cssVar, '--s-tint': tintVar }}>
             <span className="alert-marker" aria-hidden="true" />
             <div className="alert-body">
               <div className="alert-head">

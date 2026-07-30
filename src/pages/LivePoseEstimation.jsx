@@ -5,6 +5,7 @@ import { useFallDetection, TUNABLE } from '../hooks/useFallDetection'
 import AccelerationChart from '../components/AccelerationChart'
 import StatusPulse from '../components/StatusPulse'
 import SeniorSwitcher from '../components/SeniorSwitcher'
+import { Icon } from '../components/Icon'
 import { getElderById } from '../data/elders'
 import { getStatusMeta } from '../data/status'
 import { useMonitoring } from '../context/monitoring-store'
@@ -85,12 +86,8 @@ function LivePoseEstimation() {
     >
       {/* ── 헤더 ── */}
       <header className="live-header">
-        <Link
-          to="/dashboard"
-          className="back-btn"
-          aria-label="대시보드로 돌아가기"
-        >
-          ←
+        <Link to="/" className="back-btn" aria-label="메인으로 돌아가기">
+          <Icon name="arrow-left" size={20} />
         </Link>
         <div className="live-title">
           <div className="live-name-row">
@@ -109,7 +106,8 @@ function LivePoseEstimation() {
       {/* ── 위험 알림 배너 ── */}
       {fall.status === 'danger' && (
         <div className="fall-alert" role="alert">
-          ⚠️ 낙상 위험 감지! 급격한 수직 하강(속도 임계 초과 + 가속도 스파이크)이 포착되었습니다.
+          <Icon name="alert" size={20} />
+          낙상 위험 감지! 급격한 수직 하강(속도 임계 초과 + 가속도 스파이크)이 포착되었습니다.
         </div>
       )}
 
@@ -152,7 +150,10 @@ function LivePoseEstimation() {
             )}
             {pose.error && (
               <div className="camera-overlay error">
-                <p>⚠️ {pose.error}</p>
+                <p>
+                  <Icon name="alert" size={18} />
+                  {pose.error}
+                </p>
               </div>
             )}
           </div>
@@ -166,11 +167,19 @@ function LivePoseEstimation() {
                 onClick={handleStart}
                 disabled={isLoading}
               >
-                {isLoading ? '로딩 중…' : '▶ 카메라 시작'}
+                {isLoading ? (
+                  '로딩 중…'
+                ) : (
+                  <>
+                    <Icon name="play" size={16} />
+                    카메라 시작
+                  </>
+                )}
               </button>
             ) : (
               <button type="button" className="btn btn-stop" onClick={handleStop}>
-                ■ 정지 · 결과 저장
+                <Icon name="stop" size={16} />
+                정지 · 결과 저장
               </button>
             )}
             <button
@@ -270,11 +279,13 @@ function LivePoseEstimation() {
             className="btn btn-ghost full"
             onClick={downloadCsv}
           >
-            ⬇ CSV 다운로드 (연구 분석용)
+            <Icon name="download" size={16} />
+            CSV 다운로드 (연구 분석용)
           </button>
           {saved && (
             <p className="save-note">
-              ✓ 측정 결과({getStatusMeta(stats.worst).label})가 {elder?.name} 상태에 반영되었습니다.
+              <Icon name="check" size={15} />
+              측정 결과({getStatusMeta(stats.worst).label})가 {elder?.name} 상태에 반영되었습니다.
             </p>
           )}
           <p className="hint mono">

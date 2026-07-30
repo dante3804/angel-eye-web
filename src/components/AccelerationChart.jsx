@@ -65,21 +65,21 @@ function AccelerationChart({
       <rect x={padX} y={yThreshNeg} width={plotW} height={height - padY - yThreshNeg}
         fill={dangerColor} opacity="0.1" />
 
-      {/* 0 기준선 */}
+      {/* 0 기준선 — Dashboard 차트 상단 회색 점선과 동일 톤 (4 4) */}
       <line x1={padX} y1={yZero} x2={width} y2={yZero}
-        stroke="var(--border)" strokeWidth="1" />
+        stroke="var(--ae-text-muted)" strokeWidth="1" strokeDasharray="4 4" opacity="0.55" />
 
-      {/* 주의 임계선 (노랑 점선, ±) */}
+      {/* 주의 임계선 (노랑 점선, ±) — 점선 패턴/굵기 통일 (4 4, width 1) */}
       <line x1={padX} y1={yWarnPos} x2={width} y2={yWarnPos}
-        stroke={warnColor} strokeWidth="1" strokeDasharray="3 4" opacity="0.6" />
+        stroke={warnColor} strokeWidth="1" strokeDasharray="4 4" opacity="0.6" />
       <line x1={padX} y1={yWarnNeg} x2={width} y2={yWarnNeg}
-        stroke={warnColor} strokeWidth="1" strokeDasharray="3 4" opacity="0.6" />
+        stroke={warnColor} strokeWidth="1" strokeDasharray="4 4" opacity="0.6" />
 
-      {/* 낙상 임계선 (빨강 점선, ±) */}
+      {/* 낙상 임계선 (빨강 점선, ±) — 점선 패턴/굵기 통일 (4 4, width 1) */}
       <line x1={padX} y1={yThreshPos} x2={width} y2={yThreshPos}
-        stroke={dangerColor} strokeWidth="1.5" strokeDasharray="5 4" />
+        stroke={dangerColor} strokeWidth="1" strokeDasharray="4 4" />
       <line x1={padX} y1={yThreshNeg} x2={width} y2={yThreshNeg}
-        stroke={dangerColor} strokeWidth="1.5" strokeDasharray="5 4" />
+        stroke={dangerColor} strokeWidth="1" strokeDasharray="4 4" />
 
       {/* 축 라벨 (a_y 값) */}
       <text x={padX - 6} y={yThreshPos + 3} className="chart-label" textAnchor="end">

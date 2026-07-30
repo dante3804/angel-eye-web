@@ -5,6 +5,7 @@ import AlertTimeline from '../components/AlertTimeline'
 import StatusPulse from '../components/StatusPulse'
 import SkeletonFigure from '../components/SkeletonFigure'
 import SeniorSwitcher from '../components/SeniorSwitcher'
+import { Icon } from '../components/Icon'
 import { getElderById } from '../data/elders'
 import { getStatusMeta, formatElapsed, formatClock } from '../data/status'
 import { useNow } from '../hooks/useNow'
@@ -30,26 +31,24 @@ function ElderDetail() {
     )
   }
 
-  const { cssVar, glowVar } = getStatusMeta(elder.status)
+  const { cssVar, glowVar, tintVar } = getStatusMeta(elder.status)
+  const isDanger = elder.status === 'danger'
 
   return (
     <div
       className={`detail s-${elder.status}`}
-      style={{ '--s-color': cssVar, '--s-glow': glowVar }}
+      style={{ '--s-color': cssVar, '--s-glow': glowVar, '--s-tint': tintVar }}
     >
       {/* ── 헤더 ── */}
       <header className="detail-header">
-        <Link
-          to="/dashboard"
-          className="back-btn"
-          aria-label="대시보드로 돌아가기"
-        >
-          ←
+        <Link to="/" className="back-btn" aria-label="메인으로 돌아가기">
+          <Icon name="arrow-left" size={20} />
         </Link>
         <div className="detail-title">
           <div className="detail-name-row">
             <h1>{elder.name}</h1>
             <StatusPulse status={elder.status} size="lg" />
+            {isDanger && <span className="attention-badge size-lg">확인 필요</span>}
           </div>
           <p className="detail-meta mono">
             {elder.age}세 · {GENDER_LABEL[elder.gender] ?? '-'} · 현재 위치 {elder.location}
@@ -85,17 +84,18 @@ function ElderDetail() {
         >
           <div className="panel-title-row">
             <h2 className="panel-title">실시간 자세 추정</h2>
-            <span className="panel-badge mono">LIVE ▶</span>
+            <span className="panel-badge mono">
+              LIVE
+              <Icon name="play" size={10} />
+            </span>
           </div>
           <div className="skeleton-stage">
-            <span className="skeleton-grid" aria-hidden="true" />
             <SkeletonFigure
               className="skeleton-pose"
               color="var(--accent)"
               strokeWidth={2.5}
               animate
             />
-            <span className="skeleton-scan" aria-hidden="true" />
             <p className="skeleton-placeholder-text">
               탭하여 웹캠 · 가속도 낙상 감지 시작
             </p>

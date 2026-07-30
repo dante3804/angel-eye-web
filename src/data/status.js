@@ -1,9 +1,10 @@
 // 상태별 라벨/색상 단일 정의 — 색상 컨벤션: 정상=초록, 주의=노랑, 위험=빨강
 // 색상 값 자체는 theme.css의 CSS 변수에서 가져온다 (var 참조).
+// tintVar: pill 배지 공용 배경(상태색 옅은 틴트) — 앱 전역 배지 톤 통일에 사용
 export const STATUS_META = {
-  normal: { label: '정상', cssVar: 'var(--status-normal)', glowVar: 'var(--status-normal-glow)', anim: 'breathe 3.2s ease-in-out infinite' },
-  warning: { label: '주의', cssVar: 'var(--status-warning)', glowVar: 'var(--status-warning-glow)', anim: 'blink-slow 1.6s ease-in-out infinite' },
-  danger: { label: '위험', cssVar: 'var(--status-danger)', glowVar: 'var(--status-danger-glow)', anim: 'blink-fast 0.9s ease-in-out infinite' },
+  normal: { label: '정상', cssVar: 'var(--status-normal)', glowVar: 'var(--status-normal-glow)', tintVar: 'var(--ae-status-normal-tint)', anim: 'breathe 3.2s ease-in-out infinite' },
+  warning: { label: '주의', cssVar: 'var(--status-warning)', glowVar: 'var(--status-warning-glow)', tintVar: 'var(--ae-status-warning-tint)', anim: 'blink-slow 1.6s ease-in-out infinite' },
+  danger: { label: '위험', cssVar: 'var(--status-danger)', glowVar: 'var(--status-danger-glow)', tintVar: 'var(--ae-status-danger-tint)', anim: 'blink-fast 0.9s ease-in-out infinite' },
 }
 
 export const STATUS_ORDER = ['normal', 'warning', 'danger']

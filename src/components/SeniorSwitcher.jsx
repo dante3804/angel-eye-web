@@ -15,7 +15,13 @@ export default function SeniorSwitcher() {
 
   return (
     <nav className="senior-switcher" aria-label="시니어 전환">
-      <span className="senior-switcher-label">시니어 전환</span>
+      <Link
+        to="/dashboard"
+        className="senior-switcher-label"
+        title="전체 시니어 대시보드로 이동"
+      >
+        시니어 전환
+      </Link>
       {elders.map((e) => {
         const active = String(e.id) === String(id)
         const { cssVar, label } = getStatusMeta(e.status)

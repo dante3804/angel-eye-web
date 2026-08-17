@@ -1,0 +1,345 @@
+from __future__ import annotations
+ 
+import json
+import math
+from collections import deque
+from dataclasses import dataclass
+from enum import Enum
+from pathlib import Path
+ 
+import numpy as np
+ 
+# MediaPipe Pose 랜드마크 인덱스
+L_SHOULDER, R_SHOULDER = 11, 12
+L_HIP, R_HIP = 23, 24
+ 
+ 
+class Posture(Enum):
+    UPRIGHT = "서있음"
+    SITTING = "앉음"
+    RECUMBENT = "누움"
+    UNKNOWN = "미상"
+ 
+ 
+class RiskLevel(Enum):
+    NONE = 0
+    MEDIUM = 1
+    HIGH = 2
+ 
+ 
+@dataclass
+class Sensitivity:
+    """기존 임계값에 적용할 조정치."""
+    velocity_scale: float = 1.0   # 낙하 속도 임계값에 곱함 (<1 = 더 민감)
+    duration_scale: float = 1.0   # 확인/부동 시간에 곱함 (<1 = 더 빨리 알림)
+    angle_delta: float = 0.0      # 누움 판정 각도에서 뺌 (>0 = 더 쉽게 누움 판정)
+    level: RiskLevel = RiskLevel.NONE
+ 
+ 
+@dataclass
+class GuardConfig:
+    # --- 휴식 누적 ---
+    rest_threshold: float = 5 * 60     # 이 시간 이상 누워 있으면 기립 시 발동 (초)
+    rest_reset_gap: float = 60.0       # 잠깐 일어났다 다시 누우면 이 시간 내엔 누적 유지
+ 
+    # --- 위험창 (기립 시점 기준) ---
+    high_window: float = 60.0          # 0~60초 : 고감도
+    medium_window: float = 120.0       # 60~180초 : 중감도
+ 
+    # --- 감도 조정폭 (고감도 기준, 중감도는 이 폭의 절반) ---
+    velocity_scale: float = 0.70
+    duration_scale: float = 0.50
+    angle_delta: float = 8.0
+    medium_mix: float = 0.5
+ 
+    # --- 자세 분류 ---
+    lying_angle: float = 55.0          # 몸통이 수직에서 이 각도 이상 = 누움
+    lying_aspect: float = 0.95         # bbox 가로/세로 비가 이 값 이상 = 누움
+    sitting_height_ratio: float = 0.68 # 서 있을 때 대비 bbox 높이 비율
+    standing_ref_alpha: float = 0.02   # 기준 신장 EMA 갱신 속도
+    min_visibility: float = 0.5
+ 
+    # --- 인식 실패 처리 ---
+    lost_in_zone_counts: bool = True   # 휴식구역에서 사라지면(이불 등) 계속 누운 것으로 간주
+    lost_grace_outside: float = 30.0   # 구역 밖에서 사라졌을 때 유예 (초)
+ 
+    # --- 흔들림 ---
+    sway_window: float = 2.0
+    sway_warn: float = 0.020
+ 
+ 
+# ----------------------------------------------------------------------------
+class RestZone:
+    """침대/소파 영역(정규화 좌표 다각형). 안에서 누우면 '휴식', 밖에서 누우면 낙상 의심."""
+ 
+    def __init__(self, polygon: list[tuple[float, float]] | None = None):
+        self.poly = list(polygon) if polygon else None
+ 
+    @classmethod
+    def load(cls, path: str | Path) -> "RestZone":
+        p = Path(path)
+        if not p.exists():
+            print(f"[구역] {p} 없음 — 휴식구역 미설정 상태로 동작합니다.")
+            return cls(None)
+        return cls(json.loads(p.read_text())["polygon"])
+ 
+    def contains(self, x: float, y: float) -> bool:
+        if not self.poly:
+            return False
+        inside = False
+        n = len(self.poly)
+        for i in range(n):
+            x1, y1 = self.poly[i]
+            x2, y2 = self.poly[(i + 1) % n]
+            if (y1 > y) != (y2 > y):
+                xin = (x2 - x1) * (y - y1) / (y2 - y1 + 1e-9) + x1
+                if x < xin:
+                    inside = not inside
+        return inside
+ 
+ 
+class InstabilityMeter:
+    """기립 직후 몸통 좌우 흔들림. 걷기로 인한 이동 성분을 제거한 잔차의 표준편차."""
+ 
+    def __init__(self, window: float):
+        self.window = window
+        self._buf: deque[tuple[float, float]] = deque()
+ 
+    def update(self, t: float, hip_x: float) -> float:
+        self._buf.append((t, hip_x))
+        while self._buf and t - self._buf[0][0] > self.window:
+            self._buf.popleft()
+        if len(self._buf) < 5:
+            return 0.0
+        ts = np.array([b[0] for b in self._buf]) - self._buf[0][0]
+        xs = np.array([b[1] for b in self._buf])
+        resid = xs - np.polyval(np.polyfit(ts, xs, 1), ts)
+        return float(np.std(resid))
+ 
+    def reset(self) -> None:
+        self._buf.clear()
+ 
+ 
+# ----------------------------------------------------------------------------
+class OrthostaticGuard:
+    def __init__(self, cfg: GuardConfig | None = None,
+                 zone: RestZone | None = None, on_stand_up=None):
+        self.g = cfg or GuardConfig()
+        self.zone = zone or RestZone(None)
+        self.on_stand_up = on_stand_up      # 기립 순간 콜백(음성 안내 등). 인자: 누운 시간(초)
+ 
+        self.posture = Posture.UNKNOWN
+        self.rest_accum = 0.0               # 누적 누운 시간(초)
+        self.risk = RiskLevel.NONE
+        self.sway = 0.0
+        self.max_sway = 0.0
+ 
+        self._standing_h = 0.0
+        self._hip_x = 0.5
+        self._in_zone = False
+        self._last_t: float | None = None
+        self._lost_since: float | None = None
+        self._risk_start = 0.0
+        self._rest_at_stand = 0.0
+        self._left_at = -1e9
+        self._meter = InstabilityMeter(self.g.sway_window)
+ 
+    # ------------------------------------------------------------------
+    def update(self, landmarks, t: float, frame_ratio: float = 4 / 3) -> RiskLevel:
+        """landmarks: .x .y .visibility 를 가진 33개 리스트, 또는 미검출 시 None"""
+        dt = 0.0 if self._last_t is None else max(0.0, min(t - self._last_t, 1.0))
+        self._last_t = t
+ 
+        posture = self._classify(landmarks, frame_ratio)
+ 
+        # 인식 실패: 이불을 덮으면 랜드마크가 잡히지 않습니다.
+        if posture is Posture.UNKNOWN:
+            if self._lost_since is None:
+                self._lost_since = t
+            if (self.posture is Posture.RECUMBENT and self._in_zone
+                    and self.g.lost_in_zone_counts):
+                self.rest_accum += dt          # 침대 위에서 사라짐 = 계속 취침 중
+            elif t - self._lost_since > self.g.lost_grace_outside:
+                self.rest_accum = 0.0
+            return self._tick(t)
+ 
+        self._lost_since = None
+ 
+        if posture is Posture.RECUMBENT:
+            if self.posture is not Posture.RECUMBENT and t - self._left_at > self.g.rest_reset_gap:
+                self.rest_accum = 0.0          # 오래 비웠다가 다시 누움 = 새로 카운트
+            self.rest_accum += dt
+        elif self.posture is Posture.RECUMBENT:
+            self._left_at = t
+ 
+        # 기립 순간: 누움/앉음 -> 서있음
+        if (posture is Posture.UPRIGHT
+                and self.posture in (Posture.RECUMBENT, Posture.SITTING)
+                and self.rest_accum >= self.g.rest_threshold):
+            self._start_risk(t)
+ 
+        self.posture = posture
+        return self._tick(t)
+ 
+    # ------------------------------------------------------------------
+    def sensitivity(self) -> Sensitivity:
+        """현재 위험 등급에 맞는 임계값 조정치."""
+        if self.risk is RiskLevel.NONE:
+            return Sensitivity()
+        g = self.g
+        mix = 1.0 if self.risk is RiskLevel.HIGH else g.medium_mix
+        blend = lambda s: 1.0 - (1.0 - s) * mix   # noqa: E731
+        return Sensitivity(
+            velocity_scale=blend(g.velocity_scale),
+            duration_scale=blend(g.duration_scale),
+            angle_delta=g.angle_delta * mix,
+            level=self.risk,
+        )
+ 
+    def status_text(self) -> str:
+        if self.risk is RiskLevel.NONE:
+            return f"{self.posture.value} | 누적 휴식 {self.rest_accum/60:.1f}분"
+        el = (self._last_t or 0.0) - self._risk_start
+        tag = "고감도" if self.risk is RiskLevel.HIGH else "중감도"
+        return (f"기립 후 {el:.0f}s [{tag}] "
+                f"(직전 휴식 {self._rest_at_stand/60:.0f}분, 흔들림 {self.sway:.3f})")
+ 
+    @property
+    def unstable(self) -> bool:
+        """위험창 동안 흔들림이 경고 수준을 넘었는지."""
+        return self.risk is not RiskLevel.NONE and self.sway > self.g.sway_warn
+ 
+    # ------------------------------------------------------------------
+    def _start_risk(self, t: float) -> None:
+        self._risk_start = t
+        self._rest_at_stand = self.rest_accum
+        self.rest_accum = 0.0
+        self.max_sway = 0.0
+        self._meter.reset()
+        print(f"[기립 감지] 누운 시간 {self._rest_at_stand/60:.1f}분 -> "
+              f"고감도 {self.g.high_window:.0f}초 / "
+              f"중감도 {self.g.high_window + self.g.medium_window:.0f}초까지")
+        if self.on_stand_up:
+            self.on_stand_up(self._rest_at_stand)
+ 
+    def _tick(self, t: float) -> RiskLevel:
+        if self._risk_start == 0.0:
+            self.risk = RiskLevel.NONE
+            return self.risk
+ 
+        elapsed = t - self._risk_start
+        if elapsed <= self.g.high_window:
+            self.risk = RiskLevel.HIGH
+        elif elapsed <= self.g.high_window + self.g.medium_window:
+            self.risk = RiskLevel.MEDIUM
+        else:
+            self.risk = RiskLevel.NONE
+            self._risk_start = 0.0
+            print(f"[위험창 종료] 최대 흔들림 {self.max_sway:.4f}")
+            return self.risk
+ 
+        self.sway = self._meter.update(t, self._hip_x)
+        self.max_sway = max(self.max_sway, self.sway)
+        return self.risk
+ 
+    # ------------------------------------------------------------------
+    def _classify(self, lm, frame_ratio: float) -> Posture:
+        """랜드마크에서 직접 자세를 분류합니다 (기존 코드와 독립)."""
+        if lm is None:
+            return Posture.UNKNOWN
+        vis = self.g.min_visibility
+ 
+        def ok(i: int) -> bool:
+            return lm[i].visibility >= vis
+ 
+        if not (ok(L_SHOULDER) or ok(R_SHOULDER)) or not (ok(L_HIP) or ok(R_HIP)):
+            return Posture.UNKNOWN
+ 
+        pts = np.array([[p.x, p.y] for p in lm if p.visibility >= vis])
+        if len(pts) < 6:
+            return Posture.UNKNOWN
+ 
+        def mid(a: int, b: int) -> tuple[float, float]:
+            if ok(a) and ok(b):
+                return ((lm[a].x + lm[b].x) / 2, (lm[a].y + lm[b].y) / 2)
+            i = a if ok(a) else b
+            return (lm[i].x, lm[i].y)
+ 
+        sx, sy = mid(L_SHOULDER, R_SHOULDER)
+        hx, hy = mid(L_HIP, R_HIP)
+        self._hip_x = hx
+        self._in_zone = self.zone.contains(hx, hy)
+ 
+        # 몸통 각도 (x는 화면비를 곱해 실제 비율로 환산)
+        angle = math.degrees(math.atan2(abs((sx - hx) * frame_ratio), abs(hy - sy) + 1e-6))
+        bbox_w = (pts[:, 0].max() - pts[:, 0].min()) * frame_ratio
+        bbox_h = float(pts[:, 1].max() - pts[:, 1].min())
+        aspect = bbox_w / max(bbox_h, 1e-6)
+ 
+        if angle > self.g.lying_angle or aspect > self.g.lying_aspect:
+            return Posture.RECUMBENT
+ 
+        # 서 있을 때 bbox 높이를 기준으로 학습 -> 카메라 거리 자동 보정
+        if bbox_h > self._standing_h:
+            self._standing_h = bbox_h
+        else:
+            a = self.g.standing_ref_alpha
+            self._standing_h = (1 - a) * self._standing_h + a * bbox_h
+ 
+        if self._standing_h > 0 and bbox_h < self.g.sitting_height_ratio * self._standing_h:
+            return Posture.SITTING
+        return Posture.UPRIGHT
+ 
+ 
+# ----------------------------------------------------------------------------
+# 침대 구역 지정 도구
+# ----------------------------------------------------------------------------
+def pick_zone(frame, out_path: str = "rest_zone.json") -> None:
+    import cv2
+ 
+    pts: list[tuple[float, float]] = []
+    h, w = frame.shape[:2]
+    win = "rest zone (click=point, s=save, q=quit)"
+ 
+    def on_mouse(event, x, y, flags, param):
+        if event == cv2.EVENT_LBUTTONDOWN:
+            pts.append((x / w, y / h))
+ 
+    cv2.namedWindow(win)
+    cv2.setMouseCallback(win, on_mouse)
+    while True:
+        vis = frame.copy()
+        if pts:
+            poly = np.array([[int(x * w), int(y * h)] for x, y in pts], np.int32)
+            cv2.polylines(vis, [poly], len(pts) > 2, (0, 220, 255), 2)
+            for p in poly:
+                cv2.circle(vis, tuple(p), 4, (0, 220, 255), -1)
+        cv2.imshow(win, vis)
+        k = cv2.waitKey(20) & 0xFF
+        if k == ord("s") and len(pts) >= 3:
+            Path(out_path).write_text(json.dumps({"polygon": pts}, indent=2))
+            print(f"저장됨: {out_path}")
+            break
+        if k == ord("q"):
+            break
+    cv2.destroyAllWindows()
+ 
+ 
+if __name__ == "__main__":
+    import argparse
+    import cv2
+ 
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--pick", action="store_true", help="침대/소파 구역 지정")
+    ap.add_argument("--source", default="0")
+    args = ap.parse_args()
+ 
+    if args.pick:
+        src = int(args.source) if args.source.isdigit() else args.source
+        cap = cv2.VideoCapture(src)
+        ok, frame = cap.read()
+        cap.release()
+        if ok:
+            pick_zone(frame)
+        else:
+            print("프레임을 가져오지 못했습니다.")

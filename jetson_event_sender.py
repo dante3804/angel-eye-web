@@ -30,8 +30,14 @@ def send_event(device_id: str = DEVICE_ID) -> bool:
     성공하면 True, 실패하면 False를 반환한다.
     """
     payload = {
-        "device_id": device_id,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+    "device_id": device_id,
+    "user_id": 1,
+    "direction": "front",
+    "location": "floor",
+    "orthostatic_risk": "medium",
+    "prior_rest_min": 120,
+    "seconds_after_standing": 3.5,
+    "occurred_at": datetime.now(timezone.utc).isoformat(),
     }
 
     for attempt in range(1, MAX_RETRIES + 2):

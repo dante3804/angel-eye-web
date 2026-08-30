@@ -28,16 +28,16 @@ class Guardianship(Base):
     
 class Event(Base):
     __tablename__ = "events"
-
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    risk_level = Column(String, nullable=False)  # "normal" / "caution" / "danger"
-    action = Column(String, nullable=False)      # "falling", "standing_up" 등
+    direction = Column(String, nullable=False)          # front/back/side/unknown
+    location = Column(String, nullable=False)           # bed/floor
+    orthostatic_risk = Column(String, nullable=False)   # high/medium/none
+    prior_rest_min = Column(Integer, nullable=True)      # 직전 누워있던 시간(분)
+    seconds_after_standing = Column(Float, nullable=True)  # 일어난 지 몇 초만에 낙상
     detected_at = Column(DateTime, default=datetime.utcnow)
-
     user = relationship("User", back_populates="events")
     notifications = relationship("Notification", back_populates="event")
-
 
 class Notification(Base):
     __tablename__ = "notifications"

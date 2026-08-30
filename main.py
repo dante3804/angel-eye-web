@@ -67,7 +67,9 @@ def get_user_events(user_id: int, db: Session = Depends(get_db)):
 
 
 # ── 공통 헬퍼 함수 ─────────────────────────
-def create_event_record(db: Session, user_id: int, risk_level: str, action: str, detected_at=None):
+def create_event_record(db: Session, user_id: int, direction: str, location: str,
+                         orthostatic_risk: str, prior_rest_min=None,
+                         seconds_after_standing=None, detected_at=None):
     """이벤트 생성 공통 로직 (유저 존재 확인 + 저장)"""
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
@@ -75,14 +77,19 @@ def create_event_record(db: Session, user_id: int, risk_level: str, action: str,
 
     new_event = models.Event(
         user_id=user_id,
-        risk_level=risk_level,
-        action=action,
+        direction=direction,
+        location=location,
+        orthostatic_risk=orthostatic_risk,
+        prior_rest_min=prior_rest_min,
+        seconds_after_standing=seconds_after_standing,
         **({"detected_at": detected_at} if detected_at else {})
     )
     db.add(new_event)
     db.commit()
     db.refresh(new_event)
     return new_event
+
+
 
 
 def notify_guardians(db: Session, event: models.Event):
@@ -99,8 +106,8 @@ def notify_guardians(db: Session, event: models.Event):
             try:
                 send_push_notification(
                     token=guardian.fcm_token,
-                    title="낙상 위험 감지",
-                    body=f"{event.action} 상태가 감지되었습니다 (위험도: {event.risk_level})"
+                    title="낙상 감지",
+                    body=f"{event.location}에서 {event.direction} 방향 낙상이 감지되었습니다"
                 )
                 status = "sent"
             except Exception as e:
@@ -111,7 +118,6 @@ def notify_guardians(db: Session, event: models.Event):
 
     db.commit()
 
-
 # ── Event ─────────────────────────────
 @app.get("/events", response_model=list[schemas.EventResponse])
 def get_events(db: Session = Depends(get_db)):
@@ -120,7 +126,10 @@ def get_events(db: Session = Depends(get_db)):
 
 @app.post("/events", response_model=schemas.EventResponse)
 def add_event(event: schemas.EventCreate, db: Session = Depends(get_db)):
-    return create_event_record(db, event.user_id, event.risk_level, event.action)
+    return create_event_record(
+        db, event.user_id, event.direction, event.location,
+        event.orthostatic_risk, event.prior_rest_min, event.seconds_after_standing
+    )
 
 
 # ── Notification ──────────────────────
@@ -148,10 +157,14 @@ def add_notification(noti: schemas.NotificationCreate, db: Session = Depends(get
 # ── Jetson 수신 API ──────────────────────────
 @app.post("/jetson/event", response_model=schemas.EventResponse)
 def receive_jetson_event(data: schemas.JetsonEvent, db: Session = Depends(get_db)):
-    new_event = create_event_record(db, data.user_id, data.risk_level, data.action, data.timestamp)
+    new_event = create_event_record(
+        db, data.user_id, data.direction, data.location,
+        data.orthostatic_risk, data.prior_rest_min, data.seconds_after_standing,
+        data.occurred_at
+    )
 
-    if data.risk_level != "normal":
-        notify_guardians(db, new_event)
+    # 실시간 낙상 감지이므로 이벤트가 들어오면 항상 보호자에게 알림
+    notify_guardians(db, new_event)
 
     return new_event
 

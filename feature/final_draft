@@ -1,0 +1,313 @@
+"""
+run_jetson.py
+젯슨 카메라 입력 + 낙상 감지 + 기립성 저혈압 위험창 + 백엔드 전송
+
+파일 구성
+    fall_detector.py     감지 코어 (융합 판정 / 방향 분류 / 침대 판정)
+    orthostatic_guard.py 기립성 저혈압 위험 구간
+    notifier.py          백엔드 전송 (낙상 1건당 POST 1회)
+    run_jetson.py        이 파일
+
+설치 (JetPack 5/6)
+    python3 -c "import cv2; print(cv2.getBuildInformation())" | grep -i GStreamer   # YES 확인
+    pip3 install mediapipe numpy          # opencv 는 pip 로 깔지 말 것
+    wget -O pose_landmarker_lite.task \
+      https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task
+
+실행
+    python3 orthostatic_guard.py --pick --source 0    # 침대 구역 최초 1회 지정
+    python3 run_jetson.py --cam csi --endpoint https://백엔드/v1/falls --token XXX
+    python3 run_jetson.py --cam usb --device /dev/video0 --dry-run
+    python3 run_jetson.py --cam file --url test.mp4 --dry-run   # 영상으로 검증
+"""
+
+from __future__ import annotations
+
+import argparse
+import csv
+import sys
+import threading
+import time
+from datetime import datetime
+from pathlib import Path
+
+import cv2
+import numpy as np
+
+from fall_detector import Config, Event, FallDetector, draw_overlay
+from notifier import FallNotifier, NotifierConfig
+from orthostatic_guard import GuardConfig, OrthostaticGuard, RestZone
+
+
+# ----------------------------------------------------------------------------
+# GStreamer 파이프라인 (젯슨 하드웨어 가속)
+# ----------------------------------------------------------------------------
+def csi_pipeline(sid, cw, ch, fps, ow, oh, flip):
+    return (f"nvarguscamerasrc sensor-id={sid} ! "
+            f"video/x-raw(memory:NVMM), width={cw}, height={ch}, format=NV12, framerate={fps}/1 ! "
+            f"nvvidconv flip-method={flip} ! "
+            f"video/x-raw, width={ow}, height={oh}, format=BGRx ! "
+            f"videoconvert ! video/x-raw, format=BGR ! appsink drop=true max-buffers=1 sync=false")
+
+
+def usb_pipeline(dev, cw, ch, fps):
+    return (f"v4l2src device={dev} ! image/jpeg, width={cw}, height={ch}, framerate={fps}/1 ! "
+            f"jpegdec ! videoconvert ! video/x-raw, format=BGR ! "
+            f"appsink drop=true max-buffers=1 sync=false")
+
+
+def rtsp_pipeline(url, ow, oh):
+    return (f"rtspsrc location={url} latency=100 ! rtph264depay ! h264parse ! nvv4l2decoder ! "
+            f"nvvidconv ! video/x-raw, width={ow}, height={oh}, format=BGRx ! "
+            f"videoconvert ! video/x-raw, format=BGR ! appsink drop=true max-buffers=1 sync=false")
+
+
+class CameraStream:
+    """추론이 느릴 때 오래된 프레임이 쌓여 감지가 지연되는 것을 막는 스레드 리더."""
+
+    def __init__(self, src, use_gst: bool = True):
+        self.cap = cv2.VideoCapture(src, cv2.CAP_GSTREAMER) if use_gst else cv2.VideoCapture(src)
+        if not self.cap.isOpened():
+            raise SystemExit(
+                "카메라를 열지 못했습니다.\n"
+                " - CSI: ls /dev/video* 확인, --sensor-id 점검\n"
+                " - GStreamer 미지원 cv2 일 수 있습니다. pip 의 opencv-python 을 제거하고\n"
+                "   JetPack 기본 cv2(python3-opencv)를 사용하세요.")
+        self._frame, self._ts = None, 0.0
+        self._lock = threading.Lock()
+        self._stop = threading.Event()
+        self._th = threading.Thread(target=self._loop, daemon=True)
+        self._th.start()
+
+    def _loop(self):
+        fail = 0
+        while not self._stop.is_set():
+            ok, frame = self.cap.read()
+            if not ok:
+                fail += 1
+                if fail > 100:
+                    print("[경고] 프레임 수신 실패 반복 — 카메라 연결 확인")
+                    fail = 0
+                time.sleep(0.05)
+                continue
+            fail = 0
+            with self._lock:
+                self._frame, self._ts = frame, time.time()
+
+    def read(self):
+        with self._lock:
+            return (None, 0.0) if self._frame is None else (self._frame.copy(), self._ts)
+
+    def release(self):
+        self._stop.set()
+        self._th.join(timeout=1.0)
+        self.cap.release()
+
+
+# ----------------------------------------------------------------------------
+class PoseBackend:
+    """Tasks API(PoseLandmarker) 우선, 실패 시 legacy solutions 로 폴백."""
+
+    def __init__(self, model_path: str | None, complexity: int = 0):
+        import mediapipe as mp
+        self.mp, self.mode, self._t0 = mp, None, time.time()
+
+        if model_path and Path(model_path).exists():
+            try:
+                from mediapipe.tasks import python as mpp
+                from mediapipe.tasks.python import vision
+                self.landmarker = vision.PoseLandmarker.create_from_options(
+                    vision.PoseLandmarkerOptions(
+                        base_options=mpp.BaseOptions(model_asset_path=model_path),
+                        running_mode=vision.RunningMode.VIDEO, num_poses=1,
+                        min_pose_detection_confidence=0.5, min_tracking_confidence=0.5))
+                self.mode = "tasks"
+                print(f"[포즈] Tasks API: {model_path}")
+            except Exception as e:                                   # noqa: BLE001
+                print(f"[포즈] Tasks API 초기화 실패({e}) — legacy 로 전환")
+
+        if self.mode is None:
+            self.pose = mp.solutions.pose.Pose(
+                model_complexity=complexity, smooth_landmarks=True,
+                min_detection_confidence=0.5, min_tracking_confidence=0.5)
+            self.mode = "legacy"
+            print("[포즈] legacy solutions 사용")
+
+    def process(self, bgr):
+        rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
+        if self.mode == "tasks":
+            img = self.mp.Image(image_format=self.mp.ImageFormat.SRGB, data=rgb)
+            res = self.landmarker.detect_for_video(img, int((time.time() - self._t0) * 1000))
+            return (res.pose_landmarks[0], res.pose_landmarks[0]) if res.pose_landmarks else (None, None)
+        res = self.pose.process(rgb)
+        return (res.pose_landmarks.landmark, res.pose_landmarks) if res.pose_landmarks else (None, None)
+
+    def close(self):
+        (self.landmarker if self.mode == "tasks" else self.pose).close()
+
+
+def draw_pose(img, drawable, backend: PoseBackend):
+    if drawable is None:
+        return
+    mp = backend.mp
+    if backend.mode == "tasks":
+        from mediapipe.framework.formats import landmark_pb2
+        proto = landmark_pb2.NormalizedLandmarkList()
+        proto.landmark.extend(
+            [landmark_pb2.NormalizedLandmark(x=l.x, y=l.y, z=l.z) for l in drawable])
+        drawable = proto
+    mp.solutions.drawing_utils.draw_landmarks(
+        img, drawable, mp.solutions.pose.POSE_CONNECTIONS,
+        landmark_drawing_spec=mp.solutions.drawing_styles.get_default_pose_landmarks_style())
+
+
+# ----------------------------------------------------------------------------
+class LocalLog:
+    """백엔드로 보내지 않는 값까지 로컬에 남깁니다. 임계값 튜닝과 발표 자료용."""
+
+    HEAD = ["시각", "종류", "방향", "장소", "융합점수", "감지지연s",
+            "위험등급", "직전휴식분", "기립후초", "최대흔들림"]
+
+    def __init__(self, path="fall_log.csv"):
+        self.path = Path(path)
+        if not self.path.exists():
+            with self.path.open("w", newline="", encoding="utf-8") as fp:
+                csv.writer(fp).writerow(self.HEAD)
+
+    def write(self, kind, ev=None, guard=None):
+        row = [datetime.now().strftime("%Y-%m-%d %H:%M:%S"), kind]
+        if ev:
+            row += [ev.direction.value, "침대" if ev.from_bed else "바닥",
+                    f"{ev.impact:.3f}", f"{ev.latency:.2f}"]
+        else:
+            row += ["", "", "", ""]
+        if guard:
+            ctx = guard.context() or {}
+            row += [ctx.get("orthostatic_risk", "none"),
+                    ctx.get("prior_rest_min", ""),
+                    ctx.get("seconds_after_standing", ""),
+                    f"{guard.max_sway:.4f}"]
+        else:
+            row += ["", "", "", ""]
+        with self.path.open("a", newline="", encoding="utf-8") as fp:
+            csv.writer(fp).writerow(row)
+
+
+# ----------------------------------------------------------------------------
+def main() -> None:
+    ap = argparse.ArgumentParser(description="젯슨 낙상 실시간 감지")
+    ap.add_argument("--cam", choices=["csi", "usb", "rtsp", "file", "auto"], default="csi")
+    ap.add_argument("--sensor-id", type=int, default=0)
+    ap.add_argument("--device", default="/dev/video0")
+    ap.add_argument("--url", default="")
+    ap.add_argument("--cap-width", type=int, default=1280)
+    ap.add_argument("--cap-height", type=int, default=720)
+    ap.add_argument("--fps", type=int, default=30)
+    ap.add_argument("--infer-width", type=int, default=640)
+    ap.add_argument("--flip", type=int, default=0)
+    ap.add_argument("--model", default="pose_landmarker_lite.task")
+    ap.add_argument("--complexity", type=int, default=0, choices=[0, 1, 2])
+    ap.add_argument("--zone", default="rest_zone.json")
+    ap.add_argument("--endpoint", default="https://api.example.com/v1/falls")
+    ap.add_argument("--token", default="")
+    ap.add_argument("--device-id", default="jetson-01")
+    ap.add_argument("--dry-run", action="store_true", help="전송하지 않고 payload 출력만")
+    ap.add_argument("--no-guard", action="store_true", help="기립성 저혈압 기능 끄기")
+    ap.add_argument("--privacy", action="store_true", help="영상 대신 스켈레톤만 표시")
+    ap.add_argument("--headless", action="store_true")
+    args = ap.parse_args()
+
+    infer_h = int(args.infer_width * args.cap_height / args.cap_width)
+
+    if args.cam == "csi":
+        stream = CameraStream(csi_pipeline(args.sensor_id, args.cap_width, args.cap_height,
+                                           args.fps, args.infer_width, infer_h, args.flip))
+    elif args.cam == "usb":
+        stream = CameraStream(usb_pipeline(args.device, args.cap_width, args.cap_height, args.fps))
+    elif args.cam == "rtsp":
+        if not args.url:
+            sys.exit("--url 이 필요합니다")
+        stream = CameraStream(rtsp_pipeline(args.url, args.infer_width, infer_h))
+    elif args.cam == "file":
+        stream = CameraStream(args.url, use_gst=False)
+    else:
+        stream = CameraStream(0, use_gst=False)
+
+    zone = RestZone.load(args.zone)
+    det = FallDetector(Config(), zone=zone)
+    guard = None if args.no_guard else OrthostaticGuard(
+        GuardConfig(), zone,
+        on_stand_up=lambda rest: print(f"[안내] 천천히 일어나세요 (휴식 {rest/60:.0f}분)"))
+    notifier = FallNotifier(NotifierConfig(
+        endpoint=args.endpoint, token=args.token,
+        device_id=args.device_id, dry_run=args.dry_run))
+    log = LocalLog()
+    backend = PoseBackend(args.model, args.complexity)
+
+    fps, prev = 0.0, time.time()
+    pending = None          # 방향 판정을 기다리는 낙상 이벤트
+    print("낙상 감지 시작 — 종료 q / Ctrl+C")
+
+    try:
+        while True:
+            frame, ts = stream.read()
+            if frame is None:
+                time.sleep(0.02)
+                continue
+
+            small = (cv2.resize(frame, (args.infer_width, infer_h))
+                     if frame.shape[1] != args.infer_width else frame)
+            h, w = small.shape[:2]
+
+            lms, drawable = backend.process(small)
+            state, ev = det.update(lms, ts, w / h)
+
+            # 기립성 저혈압 위험창 -> 감지 감도 조정
+            if guard is not None:
+                guard.update(lms, ts, w / h)
+                det.apply_sensitivity(guard.sensitivity())
+
+            # --- 이벤트 처리 ---
+            if ev is Event.DETECTED:
+                pending = det.event                       # 아직 보내지 않음
+                print(f"[감지] {det.reason} (지연 {det.event.latency:.2f}s)")
+
+            if pending is not None and det.pop_direction() is not None:
+                payload = notifier.send_fall(pending, guard.context() if guard else None)
+                print(f"[전송] {pending.label()} -> {payload['event_id'][:8]}")
+                log.write("낙상", pending, guard)
+                pending = None
+
+            if ev is Event.CONFIRMED:
+                log.write("무응답", det.event, guard)
+                print("[기록] 부동 지속 — 무응답 상태")
+            elif ev is Event.RESOLVED:
+                log.write("자력회복", det.event, guard)
+                print("[기록] 스스로 일어남")
+
+            now = time.time()
+            dt = now - prev
+            prev = now
+            if dt > 0:
+                fps = 0.9 * fps + 0.1 * (1 / dt)
+
+            if args.headless:
+                continue
+
+            canvas = np.zeros_like(small) if args.privacy else small.copy()
+            draw_pose(canvas, drawable, backend)
+            draw_overlay(canvas, det, fps, guard.status_text() if guard else "")
+            cv2.imshow("Fall Detection", canvas)
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
+    except KeyboardInterrupt:
+        print("\n종료합니다.")
+    finally:
+        stream.release()
+        backend.close()
+        notifier.close()
+        cv2.destroyAllWindows()
+
+
+if __name__ == "__main__":
+    main()

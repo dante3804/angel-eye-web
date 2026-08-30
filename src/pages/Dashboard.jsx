@@ -1,5 +1,6 @@
+import { Link } from 'react-router-dom'
 import ElderCard from '../components/ElderCard'
-import SkeletonFigure from '../components/SkeletonFigure'
+import { Icon } from '../components/Icon'
 import { elders } from '../data/elders'
 import { STATUS_META, STATUS_ORDER } from '../data/status'
 import { useNow } from '../hooks/useNow'
@@ -18,19 +19,38 @@ function Dashboard() {
     {},
   )
 
-  // 시계: "21:07:01" (콜론 구분)
+  // 시계: "오전 03시 39분 21초"
   const pad = (n) => String(n).padStart(2, '0')
-  const clock = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`
-  // 날짜: "2026.07.29 (수)"
+  const rawHours = now.getHours()
+  const ampm = rawHours < 12 ? '오전' : '오후'
+  const displayHours = pad(rawHours % 12 || 12)
+  const minutes = pad(now.getMinutes())
+  const seconds = pad(now.getSeconds())
+  const clock = `${ampm} ${displayHours}시 ${minutes}분 ${seconds}초`
+
+  // 날짜: "2026.08.31 (월)"
   const weekday = now.toLocaleDateString('ko-KR', { weekday: 'short' })
   const date = `${now.getFullYear()}.${pad(now.getMonth() + 1)}.${pad(now.getDate())} (${weekday})`
 
   return (
     <div className="dashboard">
       <header className="topbar">
-        <div className="brand">
-          <span className="brand-logo">
-            <SkeletonFigure color="var(--accent)" strokeWidth={3} animate />
+        <Link to="/" className="brand" style={{ textDecoration: 'none' }}>
+          <span
+            className="brand-logo"
+            style={{
+              width: '32px',
+              height: '32px',
+              background: 'linear-gradient(135deg, #0284c7, #2563eb)',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#ffffff',
+              boxShadow: '0 2px 8px rgba(2, 132, 199, 0.3)',
+            }}
+          >
+            <Icon name="eye" size={20} />
           </span>
           <div className="brand-text">
             <h1>
@@ -38,7 +58,7 @@ function Dashboard() {
             </h1>
             <p className="brand-sub">보호자 모니터링 대시보드</p>
           </div>
-        </div>
+        </Link>
 
         <div className="topbar-status">
           <span className="live-badge">

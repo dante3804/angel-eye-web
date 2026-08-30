@@ -1,22 +1,26 @@
-/* =========================================================
-   Dashboard — 메인 모니터링 화면 (모바일 우선)
-   ========================================================= */
+/* =======================================================
+   Angel-Eye 대시보드 & ElderCard 완벽 일체화 스타일
+   ======================================================= */
+
 .dashboard {
-  position: relative;
-  max-width: 1080px;
+  min-height: 100vh;
+  background-color: #f8fafc;
+  color: #0f172a;
+  padding: 28px 32px 60px;
+  max-width: 1240px;
   margin: 0 auto;
-  padding: 20px 16px 56px;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Pretendard Variable", Pretendard, sans-serif;
 }
 
-/* ── 상단바 ── */
+/* 1. 상단 네비게이션 헤더 */
 .topbar {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-  padding: 8px 0 18px;
-  border-bottom: 1px solid var(--border);
+  align-items: center;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 28px;
 }
 
 .brand {
@@ -26,29 +30,38 @@
 }
 
 .brand-logo {
-  width: 38px;
-  height: 56px;
-  display: block;
-  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 10px;
+  padding: 4px;
 }
 
 .brand-text h1 {
-  font-size: 1.55rem;
-  letter-spacing: -0.01em;
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: -0.5px;
   line-height: 1.1;
 }
 
 .brand-accent {
-  color: var(--accent);
+  color: #0284c7;
 }
 
 .brand-sub {
-  margin: 2px 0 0;
-  font-size: 0.8rem;
-  color: var(--text-dim);
-  letter-spacing: 0.02em;
+  font-size: 12px;
+  color: #64748b;
+  margin: 3px 0 0;
+  font-weight: 500;
 }
 
+/* 상단 우측 LIVE & 시계 */
 .topbar-status {
   display: flex;
   align-items: center;
@@ -58,239 +71,247 @@
 .live-badge {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 6px 12px;
-  border: 1px solid var(--status-danger);
-  border-radius: 999px;
-  color: var(--status-danger);
-  font-size: 0.78rem;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  background: #fef2f2;
+  border: 1px solid #fee2e2;
+  font-size: 12px;
   font-weight: 800;
-  letter-spacing: 0.12em;
+  color: #ef4444;
+  letter-spacing: 0.5px;
 }
 
 .live-dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
+  background-color: #ef4444;
   border-radius: 50%;
-  background: var(--status-danger);
-  animation: pulse-live 1.4s ease-in-out infinite;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
 }
 
 .clock-block {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  text-align: right;
 }
 
 .clock {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--text-h);
-  line-height: 1;
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  display: block;
+  letter-spacing: -0.5px;
 }
 
 .clock-date {
-  font-size: 0.75rem;
-  color: var(--text-dim);
+  font-size: 11px;
+  color: #64748b;
+  display: block;
   margin-top: 3px;
+  font-weight: 500;
 }
 
-/* ── 요약 ── */
+/* 2. 상태 요약 섹션 */
 .summary {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 14px;
-  flex-wrap: wrap;
-  margin: 22px 0 24px;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 14px 20px;
+  margin-bottom: 28px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
 }
 
-/* 왼쪽: 회색 캡션 */
 .summary-caption {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  gap: 10px;
 }
 
 .summary-caption-title {
-  font-size: 0.9rem;
+  font-size: 14px;
   font-weight: 700;
-  color: var(--text-dim);
-  letter-spacing: 0.02em;
+  color: #0f172a;
 }
 
 .summary-caption-sub {
-  font-size: 0.76rem;
-  color: var(--ae-text-muted);
+  font-size: 12px;
+  color: #0284c7;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-weight: 600;
 }
 
-/* 오른쪽: 가로 상태 pill 배지 3개 */
 .summary-status {
   display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .summary-pill {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 6px 14px;
-  border-radius: 999px;
-  background: var(--s-tint);
-  border: 1px solid color-mix(in srgb, var(--s-color) 24%, transparent);
-  color: var(--s-color);
-  font-size: 0.85rem;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
   font-weight: 700;
-  line-height: 1;
+  color: var(--s-color);
+  background: var(--s-tint);
+  border: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .summary-pill-dot {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: var(--s-color);
-  flex: none;
+  background-color: var(--s-color);
 }
 
-/* ── 카드 그리드 ── */
+/* 3. 어르신 모니터링 카드 그리드 */
 .elder-grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-bottom: 36px;
 }
 
-/* ── 모니터 패널 카드 ── */
-/* 좌측 색상 바 제거 → 카드 전체에 상태색 옅은 틴트 + 같은 톤 옅은 테두리 */
+/* 4. ElderCard 개별 카드 스타일링 (핵심!) */
 .elder-card {
-  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 18px;
-  border: 1px solid color-mix(in srgb, var(--s-color) 22%, var(--border));
-  border-radius: var(--ae-radius);
-  background: color-mix(in srgb, var(--s-color) 5%, var(--ae-bg));
-  box-shadow: var(--shadow-panel);
-  overflow: hidden;
-  transition:
-    transform 0.15s ease,
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 22px;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  position: relative;
 }
 
-/* 클릭 가능한 카드 — 아주 미묘한 상승 + 그림자 강화 */
 .elder-card:hover {
-  transform: translateY(-2px);
-  border-color: color-mix(in srgb, var(--s-color) 45%, var(--border));
-  box-shadow: 0 10px 26px -16px rgba(20, 40, 80, 0.35);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px -4px rgba(15, 23, 42, 0.08);
+  border-color: #cbd5e1;
 }
 
-.elder-card:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
+/* 카드 상태별 테두리 및 배경 액센트 */
+.elder-card.s-danger {
+  border-color: #fca5a5;
+  background: linear-gradient(180deg, #ffffff 0%, #fffcfc 100%);
+}
+.elder-card.s-warning {
+  border-color: #fde68a;
+  background: linear-gradient(180deg, #ffffff 0%, #fffdfa 100%);
+}
+.elder-card.s-normal {
+  border-color: #bbf7d0;
+  background: linear-gradient(180deg, #ffffff 0%, #fafffc 100%);
 }
 
+/* 카드 상단 */
 .elder-card-top {
   display: flex;
-  align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
-}
-
-/* 이름 옆 배지 묶음 ("확인 필요" + 상태 pill) */
-.elder-badges {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+  align-items: flex-start;
+  margin-bottom: 16px;
 }
 
 .elder-id {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .elder-name {
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: var(--text-h);
-  line-height: 1;
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.3px;
 }
 
 .elder-meta {
-  font-size: 0.78rem;
-  color: var(--text-dim);
-  letter-spacing: 0.03em;
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
 }
 
-/* 스파크라인 + 축/캡션을 세로 스택으로 분리 →
-   캡션이 차트 SVG 좌표 공간 위에 얹히지 않아 데이터 형태와 무관하게 겹침 불가 */
-.elder-spark {
+.elder-badges {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 6px;
 }
 
-/* 차트 하단 축 라벨 (-60분 / 지금) — 앱 공용 축 라벨 톤 */
+.attention-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #dc2626;
+  background-color: #fef2f2;
+  border: 1px solid #fee2e2;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+/* 활동량 스파크라인 영역 */
+.elder-spark {
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  border-radius: 12px;
+  padding: 12px 14px 10px;
+  margin-bottom: 16px;
+}
+
+.elder-spark svg {
+  width: 100% !important;
+  display: block;
+}
+
 .spark-axis {
   display: flex;
   justify-content: space-between;
-  font-size: 0.68rem;
-  color: var(--ae-text-muted);
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 6px;
+  font-variant-numeric: tabular-nums;
 }
 
-/* 캡션 + 상태 정보 배지를 한 줄에 (차트와 분리되어 겹치지 않음) */
 .spark-caption-row {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
 }
 
 .spark-caption {
-  font-size: 0.68rem;
-  color: var(--text-dim);
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
 }
 
-/* 상태별 정보 배지 (임계 0.70 / 활동 저하 감지 / 임계 초과 · 시각) */
 .spark-badge {
-  font-size: 0.68rem;
+  font-size: 11px;
   font-weight: 700;
-  line-height: 1;
-  padding: 4px 9px;
-  border-radius: 999px;
-  white-space: nowrap;
+  padding: 2px 8px;
+  border-radius: 4px;
 }
-.spark-badge.neutral {
-  color: var(--ae-text-2);
-  background: var(--ae-bg-alt);
-  border: 1px solid var(--ae-border);
-}
-.spark-badge.warn {
-  color: var(--ae-status-warning);
-  background: var(--ae-status-warning-tint);
-  border: 1px solid color-mix(in srgb, var(--ae-status-warning) 30%, transparent);
-}
-.spark-badge.danger {
-  color: var(--ae-status-danger);
-  background: var(--ae-status-danger-tint);
-  border: 1px solid color-mix(in srgb, var(--ae-status-danger) 30%, transparent);
-}
+.spark-badge.neutral { background: #e2e8f0; color: #334155; }
+.spark-badge.warn { background: #fffbeb; color: #d97706; }
+.spark-badge.danger { background: #fef2f2; color: #dc2626; }
 
-/* 위험 카드의 마지막 감지 시간/시각 강조 */
-.foot-value.danger-time {
-  color: var(--ae-status-danger);
-}
-
+/* 카드 하단 정보 */
 .elder-card-foot {
   display: flex;
-  align-items: flex-end;
   justify-content: space-between;
-  padding-top: 12px;
-  border-top: 1px solid var(--border);
+  align-items: center;
+  padding-top: 14px;
+  border-top: 1px solid #f1f5f9;
+  margin-top: auto;
 }
 
 .foot-block {
@@ -300,46 +321,58 @@
 }
 
 .foot-block.align-end {
-  align-items: flex-end;
+  text-align: right;
 }
 
 .foot-label {
-  font-size: 0.72rem;
-  color: var(--text-dim);
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 500;
 }
 
 .foot-value {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--text-h);
+  font-size: 14px;
+  font-weight: 800;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
 }
 
-/* ── 하단 정보 바 ── */
+.foot-value.danger-time {
+  color: #dc2626;
+}
+
+/* 5. 푸터 */
 .dash-foot {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-top: 20px;
-  padding-top: 14px;
-  border-top: 1px solid var(--border);
+  align-items: center;
+  padding-top: 20px;
+  border-top: 1px solid #e2e8f0;
+  font-size: 12px;
+  color: #64748b;
 }
 
-.dash-foot-note {
-  font-size: 0.72rem;
-  color: var(--ae-text-muted);
+.dash-foot-note.mono {
+  font-variant-numeric: tabular-nums;
 }
 
-/* ── 반응형 ── */
-@media (min-width: 680px) {
+/* 반응형 처리 */
+@media (max-width: 1024px) {
+  .elder-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 680px) {
   .dashboard {
-    padding: 28px 24px 64px;
+    padding: 16px;
   }
   .elder-grid {
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: 1fr;
   }
-  .brand-text h1 {
-    font-size: 1.8rem;
+  .summary {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
   }
 }

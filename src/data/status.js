@@ -2,9 +2,27 @@
 // 색상 값 자체는 theme.css의 CSS 변수에서 가져온다 (var 참조).
 // tintVar: pill 배지 공용 배경(상태색 옅은 틴트) — 앱 전역 배지 톤 통일에 사용
 export const STATUS_META = {
-  normal: { label: '정상', cssVar: 'var(--status-normal)', glowVar: 'var(--status-normal-glow)', tintVar: 'var(--ae-status-normal-tint)', anim: 'breathe 3.2s ease-in-out infinite' },
-  warning: { label: '주의', cssVar: 'var(--status-warning)', glowVar: 'var(--status-warning-glow)', tintVar: 'var(--ae-status-warning-tint)', anim: 'blink-slow 1.6s ease-in-out infinite' },
-  danger: { label: '위험', cssVar: 'var(--status-danger)', glowVar: 'var(--status-danger-glow)', tintVar: 'var(--ae-status-danger-tint)', anim: 'blink-fast 0.9s ease-in-out infinite' },
+  normal: {
+    label: '정상',
+    cssVar: 'var(--status-normal)',
+    glowVar: 'var(--status-normal-glow)',
+    tintVar: 'var(--ae-status-normal-tint)',
+    anim: 'breathe 3.2s ease-in-out infinite',
+  },
+  warning: {
+    label: '주의',
+    cssVar: 'var(--status-warning)',
+    glowVar: 'var(--status-warning-glow)',
+    tintVar: 'var(--ae-status-warning-tint)',
+    anim: 'blink-slow 1.6s ease-in-out infinite',
+  },
+  danger: {
+    label: '위험',
+    cssVar: 'var(--status-danger)',
+    glowVar: 'var(--status-danger-glow)',
+    tintVar: 'var(--ae-status-danger-tint)',
+    anim: 'blink-fast 0.9s ease-in-out infinite',
+  },
 }
 
 export const STATUS_ORDER = ['normal', 'warning', 'danger']
@@ -34,4 +52,26 @@ export function formatClock(isoString) {
   const hh = String(d.getHours()).padStart(2, '0')
   const mm = String(d.getMinutes()).padStart(2, '0')
   return `${hh}:${mm}`
+}
+
+// 상단 헤더 실시간 라이브 시계 포맷팅 (오전/오후 HH시 MM분 SS초)
+export function formatLiveClock(date = new Date()) {
+  const d = new Date(date)
+  const hours = d.getHours()
+  const minutes = String(d.getMinutes()).padStart(2, '0')
+  const seconds = String(d.getSeconds()).padStart(2, '0')
+  const ampm = hours < 12 ? '오전' : '오후'
+  const displayHours = String(hours % 12 || 12).padStart(2, '0')
+
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  const dayNames = ['일', '월', '화', '수', '목', '금', '토']
+  const dayName = dayNames[d.getDay()]
+
+  return {
+    ampm,
+    timeString: `${ampm} ${displayHours}시 ${minutes}분 ${seconds}초`,
+    dateString: `${year}.${month}.${day} (${dayName})`,
+  }
 }

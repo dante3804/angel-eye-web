@@ -1,395 +1,617 @@
-/* =========================================================
-   ElderDetail — 상세 모니터링 화면 (모바일 세로 스크롤 우선)
-   ========================================================= */
-.detail {
-  max-width: 1080px;
+/* =======================================================
+   Angel-Eye 어르신 상세 관제 페이지 스타일링
+   ======================================================= */
+
+.elder-detail-page {
+  min-height: 100vh;
+  background-color: #f8fafc;
+  color: #0f172a;
+  padding: 24px 32px 60px;
+  max-width: 1240px;
   margin: 0 auto;
-  padding: 16px 16px 56px;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Pretendard Variable", Pretendard, sans-serif;
 }
 
-.detail.not-found {
-  text-align: center;
-  padding-top: 80px;
+/* 1. 상단 네비게이션 & 시니어 전환 */
+.detail-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 24px;
 }
 
-/* 시니어 스위처 여백 (헤더 아래) */
-.detail > .senior-switcher {
-  margin: 16px 0 4px;
-}
-
-/* ── 헤더 ── */
-.detail-header {
+.topbar-left {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 8px 0 18px;
-  border-bottom: 1px solid var(--border);
 }
 
-.back-btn {
-  flex-shrink: 0;
-  width: 40px;
-  height: 40px;
+.detail-back-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--panel);
-  color: var(--text-h);
-  cursor: pointer;
-  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+  color: #64748b;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  transform: rotate(180deg);
 }
 
-.back-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: var(--ae-accent-tint);
+.detail-back-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
 }
 
-.back-btn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-.detail-name-row {
+.elder-title-group {
   display: flex;
   align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
+  gap: 10px;
 }
 
-.detail-title h1 {
-  font-size: 1.7rem;
-  line-height: 1.1;
+.elder-title-group h1 {
+  font-size: 24px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: -0.5px;
 }
 
-.detail-meta {
-  margin: 5px 0 0;
-  font-size: 0.85rem;
-  color: var(--text-dim);
-  letter-spacing: 0.02em;
+.status-badge-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--s-color);
+  background: var(--s-tint);
 }
 
-.back-link {
-  display: inline-block;
-  margin-top: 16px;
-  color: var(--accent);
+.badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.elder-header-meta {
+  font-size: 13px;
+  color: #64748b;
+  margin-left: 6px;
+}
+
+/* 시니어 빠른 전환 탭 */
+.senior-switcher {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.switcher-label {
+  font-size: 12px;
+  color: #94a3b8;
   font-weight: 600;
 }
 
-/* ── 그리드 레이아웃 ── */
-.detail-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-  margin-top: 20px;
-}
-
-/* ── 패널 공통 ── */
-.panel {
-  border: 1px solid var(--border);
-  border-radius: var(--ae-radius);
-  background: var(--panel);
-  box-shadow: var(--shadow-panel);
-  padding: 18px;
-}
-
-.panel-title {
-  font-size: 1rem;
-  color: var(--text-h);
-  margin-bottom: 14px;
-  letter-spacing: 0.01em;
-}
-
-.panel-title-row {
+.switcher-pills {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 14px;
-}
-.panel-title-row .panel-title {
-  margin-bottom: 0;
+  gap: 6px;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: 10px;
 }
 
-.panel-badge {
+.switch-pill {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 0.66rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  color: var(--accent);
-  border: 1px solid var(--border-strong);
-  border-radius: 999px;
-  padding: 3px 9px;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  text-decoration: none;
+  background: transparent;
+  transition: all 0.2s ease;
 }
 
-/* ── 위험도 게이지 ── */
-/* 카드 배경 옅은 상태 틴트 + 같은 톤 옅은 테두리 (Dashboard 카드와 통일) */
-.gauge-panel {
+.switch-pill.is-active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.switch-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+/* 2. 대시보드 레이아웃 */
+.detail-dashboard-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 20px;
+  align-items: start;
+}
+
+.layout-main-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.detail-panel {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px 22px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.02);
+}
+
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.panel-head h3 {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.panel-head-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.summary-pill {
+  font-size: 11px;
+  font-weight: 700;
+  color: #0284c7;
+  background: #e0f2fe;
+  padding: 2px 8px;
+  border-radius: 9999px;
+}
+
+.panel-live-tag {
+  font-size: 11px;
+  font-weight: 800;
+  color: #0284c7;
+  border: 1px solid #bae6fd;
+  background: #f0f9ff;
+  padding: 2px 8px;
+  border-radius: 9999px;
+}
+
+/* 3. 상단 2분할 (위험도 + 자세 추정) */
+.upper-card-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* 실시간 위험도 게이지 */
+.risk-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.risk-gauge-wrap {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 0 0;
+}
+
+.gauge-svg {
+  width: 200px;
+  height: 110px;
+  overflow: visible;
+}
+
+.gauge-center-stat {
+  position: absolute;
+  top: 45px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: color-mix(in srgb, var(--s-color) 5%, var(--ae-bg));
-  border-color: color-mix(in srgb, var(--s-color) 22%, var(--border));
 }
 
-.risk-gauge {
+.gauge-num {
+  font-size: 34px;
+  font-weight: 900;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -1px;
+}
+
+.gauge-sub {
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.gauge-status-text {
+  font-size: 13px;
+  font-weight: 800;
+  margin-top: 2px;
+}
+
+.panel-foot-meta {
+  text-align: center;
+  font-size: 12px;
+  color: #94a3b8;
+  padding-top: 12px;
+  border-top: 1px solid #f8fafc;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 실시간 자세 추정 카드 */
+.pose-interactive-box {
   position: relative;
-  width: 200px;
-  max-width: 100%;
+  height: 180px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 12px 10px;
+  text-decoration: none;
+  transition: all 0.2s ease;
 }
 
-.risk-gauge-svg {
-  width: 100%;
-  height: auto;
+.pose-interactive-box:hover {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+}
+
+.hud-corner {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-color: #0284c7;
+  border-style: solid;
+}
+.hud-corner.tl { top: 8px; left: 8px; border-width: 2px 0 0 2px; }
+.hud-corner.tr { top: 8px; right: 8px; border-width: 2px 2px 0 0; }
+.hud-corner.bl { bottom: 8px; left: 8px; border-width: 0 0 2px 2px; }
+.hud-corner.br { bottom: 8px; right: 8px; border-width: 0 2px 2px 0; }
+
+.skeleton-canvas-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.skeleton-canvas-box svg {
+  height: 95px !important;
+  width: auto !important;
+  max-height: 100% !important;
   display: block;
 }
 
-.risk-gauge-value {
-  transition: stroke-dashoffset 0.8s ease;
+.pose-tap-guide {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 600;
 }
 
-.risk-gauge-center {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-}
-
-.risk-gauge-score {
-  font-size: 3rem;
-  font-weight: 800;
-  color: var(--s-color);
-  line-height: 1;
-}
-
-.risk-gauge-unit {
-  font-size: 0.72rem;
-  color: var(--text-dim);
-}
-
-/* 상태 라벨을 pill 배지로 (옅은 배경 + 진한 텍스트 + 999px) */
-.risk-gauge-status {
-  margin-top: 8px;
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--s-color);
-  background: var(--s-tint);
-  border: 1px solid color-mix(in srgb, var(--s-color) 24%, transparent);
-  border-radius: 999px;
-  padding: 4px 14px;
-  line-height: 1;
-}
-
-.gauge-note {
-  margin-top: 14px;
-  font-size: 0.78rem;
-  color: var(--text-dim);
-  text-align: center;
-}
-
-/* ── Skeleton 시각화 ── */
-.skeleton-panel-live {
-  cursor: pointer;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-.skeleton-panel-live:hover,
-.skeleton-panel-live:focus-visible {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent), var(--shadow-panel);
-  outline: none;
-}
-
-.skeleton-stage {
-  position: relative;
-  aspect-ratio: 4 / 3;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--ae-bg-alt);
-  overflow: hidden;
+/* 4. 24시간 활동 막대 차트 & 툴팁 */
+.chart-legend {
   display: flex;
   align-items: center;
-  justify-content: center;
-}
-
-.skeleton-pose {
-  position: relative;
-  width: auto;
-  height: 78%;
-  color: var(--accent);
-}
-
-.skeleton-placeholder-text {
-  position: absolute;
-  bottom: 10px;
-  left: 0;
-  right: 0;
-  text-align: center;
-  font-size: 0.72rem;
-  color: var(--text-dim);
-}
-
-/* ── 알림 타임라인 ── */
-.alert-timeline {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.alert-item {
-  position: relative;
-  padding: 0 0 16px 22px;
-  border-left: 2px solid var(--border);
-}
-.alert-item:last-child {
-  padding-bottom: 0;
-  border-left-color: transparent;
-}
-
-.alert-marker {
-  position: absolute;
-  left: -7px;
-  top: 2px;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: var(--s-color);
-}
-
-.alert-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.alert-type {
-  font-weight: 700;
-  color: var(--text-h);
-  font-size: 0.95rem;
-}
-
-/* 상태 배지 pill (옅은 배경 + 진한 텍스트 + 999px) — 앱 공용 톤 */
-.alert-tag {
-  font-size: 0.72rem;
-  font-weight: 700;
-  background: var(--s-tint);
-  border: 1px solid color-mix(in srgb, var(--s-color) 24%, transparent);
-  border-radius: 999px;
-  padding: 2px 9px;
-  line-height: 1.3;
-}
-
-.alert-msg {
-  margin: 4px 0 4px;
-  font-size: 0.85rem;
-  color: var(--text);
-}
-
-.alert-time {
-  font-size: 0.72rem;
-  color: var(--text-dim);
-}
-
-.timeline-empty {
-  color: var(--text-dim);
-  font-size: 0.9rem;
-}
-
-/* ── 24시간 활동 그래프 ── */
-.legend {
-  display: flex;
   gap: 12px;
+  font-size: 11px;
+  color: #64748b;
 }
 
 .legend-item {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.74rem;
-  color: var(--text-dim);
 }
 
 .legend-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+.legend-dot.normal { background-color: #10b981; }
+.legend-dot.warn { background-color: #f59e0b; }
+.legend-dot.danger { background-color: #ef4444; }
+
+/* 상단 범례용 점선 샘플 */
+.legend-line-sample {
+  width: 14px;
+  height: 0;
+  border-top: 1.5px dashed #94a3b8;
 }
 
-.activity-bars {
-  width: 100%;
+/* 생활 주기 구간 밴드 */
+.time-bands-header {
+  display: grid;
+  grid-template-columns: 6fr 12fr 6fr;
+  gap: 6px;
+  margin-bottom: 12px;
 }
 
-.activity-track {
+.time-band-tag {
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  padding: 4px 0;
+  border-radius: 6px;
+  letter-spacing: -0.2px;
+}
+.time-band-tag.sleep { background: #f1f5f9; color: #64748b; }
+.time-band-tag.active { background: #f0fdf4; color: #15803d; }
+.time-band-tag.rest { background: #fefce8; color: #a16207; }
+
+.histogram-container {
+  position: relative;
+  padding: 16px 0 26px;
+}
+
+/* 평균 활동 기준 점선 (글자 없이 깔끔하게 선만 관통) */
+.chart-baseline {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  border-top: 1.5px dashed #cbd5e1;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* 플로팅 툴팁 */
+.hist-tooltip {
+  position: absolute;
+  top: -16px;
+  transform: translateX(-50%);
+  background: #0f172a;
+  color: #ffffff;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.74rem;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.25);
+  pointer-events: none;
+  z-index: 20;
+  white-space: nowrap;
+  animation: tt-fade 0.15s ease-out;
+}
+
+@keyframes tt-fade {
+  from { opacity: 0; transform: translate(-50%, 4px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.tt-time-tag {
+  color: #94a3b8;
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.tt-body {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tt-body strong {
+  color: #38bdf8;
+}
+
+.tt-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+.tt-badge.s-normal { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+.tt-badge.s-warning { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+.tt-badge.s-danger { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+
+/* 막대 트랙 */
+.bars-track {
   display: flex;
   align-items: flex-end;
-  gap: 2px;
-  height: 120px;
-  padding: 6px 0;
+  justify-content: space-between;
+  height: 110px;
+  border-bottom: 1px solid #e2e8f0;
+  gap: 3px;
+  position: relative;
+  z-index: 2;
 }
 
-.activity-bar-col {
+.bar-group {
   flex: 1;
   height: 100%;
   display: flex;
-  align-items: flex-end;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  position: relative;
+  cursor: pointer;
 }
 
-.activity-bar {
+/* 막대 뒷배경 트랙 */
+.bar-track-bg {
   width: 100%;
-  min-height: 3px;
-  border-radius: 3px 3px 0 0;
-  transition: height 0.3s ease;
+  max-width: 12px;
+  height: 100%;
+  background: #f1f5f9;
+  border-radius: 4px 4px 0 0;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
 }
 
-/* 축 라벨 타이포그래피를 Dashboard "-60분/지금" 라벨과 통일 */
-.activity-axis {
+.hist-bar {
+  width: 100%;
+  border-radius: 4px 4px 0 0;
+  transition: transform 0.2s ease, filter 0.2s ease, height 0.3s ease;
+}
+
+.bar-group:hover .hist-bar {
+  filter: brightness(1.2);
+  transform: scaleY(1.05);
+  transform-origin: bottom;
+}
+
+.hist-bar.bar-normal { background-color: #10b981; }
+.hist-bar.bar-warning { background-color: #f59e0b; }
+.hist-bar.bar-danger { background-color: #ef4444; }
+
+/* 현재 시간 표시 핀 */
+.now-pin-dot {
+  position: absolute;
+  bottom: -4px;
+  width: 7px;
+  height: 7px;
+  background: #0284c7;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px #bae6fd;
+}
+
+/* 시간 라벨 정렬 */
+.bar-label {
+  position: absolute;
+  bottom: -22px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* 5. 우측 알림 이력 타임라인 */
+.timeline-panel {
+  height: 100%;
+}
+
+.timeline-list {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-left: 12px;
+}
+
+.timeline-list::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 15px;
+  width: 2px;
+  background: #f1f5f9;
+}
+
+.timeline-item {
+  position: relative;
+  display: flex;
+  gap: 12px;
+}
+
+.timeline-bullet {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  margin-top: 5px;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.timeline-item.type-danger .timeline-bullet { background: #ef4444; box-shadow: 0 0 0 3px #fee2e2; }
+.timeline-item.type-warning .timeline-bullet { background: #f59e0b; box-shadow: 0 0 0 3px #fef3c7; }
+.timeline-item.type-normal .timeline-bullet { background: #10b981; box-shadow: 0 0 0 3px #dcfce7; }
+
+.timeline-body {
+  flex: 1;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.timeline-title-row {
   display: flex;
   justify-content: space-between;
-  margin-top: 6px;
-  font-size: 0.68rem;
-  color: var(--ae-text-muted);
+  align-items: center;
+  margin-bottom: 4px;
 }
 
-/* ── 데스크탑 레이아웃 ── */
-@media (min-width: 760px) {
-  .detail {
-    padding: 28px 24px 64px;
-  }
-  .detail-title h1 {
-    font-size: 2rem;
-  }
-  .detail-grid {
-    grid-template-columns: 1fr 1fr;
-    grid-template-areas:
-      'gauge timeline'
-      'skeleton timeline'
-      'activity activity';
-  }
-  .gauge-panel {
-    grid-area: gauge;
-  }
-  .skeleton-panel {
-    grid-area: skeleton;
-  }
-  .timeline-panel {
-    grid-area: timeline;
-  }
-  .activity-panel {
-    grid-area: activity;
+.timeline-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.timeline-tag {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.timeline-tag.tag-danger { background: #fef2f2; color: #ef4444; }
+.timeline-tag.tag-warning { background: #fffbeb; color: #d97706; }
+.timeline-tag.tag-normal { background: #f0fdf4; color: #16a34a; }
+
+.timeline-desc {
+  font-size: 12px;
+  color: #64748b;
+  margin: 0 0 4px;
+  line-height: 1.4;
+}
+
+.timeline-time {
+  font-size: 11px;
+  color: #94a3b8;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 반응형 처리 */
+@media (max-width: 1080px) {
+  .detail-dashboard-layout {
+    grid-template-columns: 1fr;
   }
 }
 
-@media (min-width: 1000px) {
-  .detail-grid {
-    grid-template-columns: 1.1fr 1fr 1fr;
-    grid-template-areas:
-      'gauge skeleton timeline'
-      'activity activity timeline';
+@media (max-width: 768px) {
+  .detail-topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .upper-card-row {
+    grid-template-columns: 1fr;
   }
 }

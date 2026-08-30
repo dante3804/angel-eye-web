@@ -42,7 +42,7 @@ function ElderCard({ elder }) {
           markPeak={isDanger}
         />
         <div className="spark-axis mono">
-          <span>-60분</span>
+          <span>1시간 전</span>
           <span>지금</span>
         </div>
         <div className="spark-caption-row">
